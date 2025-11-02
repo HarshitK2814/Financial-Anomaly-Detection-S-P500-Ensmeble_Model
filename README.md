@@ -953,5 +953,6 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m#   C a r e e r - P a t h - H e l p e r - A I - - A g e n t  
+3. Commit changes (`git commit -m#   C a r e e r - P a t h - H e l p e r - A I - - A g e n t 
+ 
  
