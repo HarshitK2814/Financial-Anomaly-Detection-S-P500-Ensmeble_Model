@@ -1,6 +1,6 @@
 # Random Forest Meta-Learning Ensemble for Financial Anomaly Detection
 
-## 🚀 Breakthrough Achievement: First 70.37% F1 Score in Financial Anomaly Detection
+## 🚀 Breakthrough Achievement: First 70.37% F1 Score in Financial Anomaly 
 
 [![Performance Badge](https://img.shields.io/badge/F1%20Score-70.37%25-brightgreen)](https://github.com/your-repo)
 [![Breakthrough Status](https://img.shields.io/badge/Breakthrough-First%20%3E70%25-blue)](https://github.com/your-repo)
