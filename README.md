@@ -13,21 +13,6 @@
 **Research Type:** Financial Machine Learning / Anomaly Detection  
 **Key Achievement:** First financial anomaly detection model to exceed 70% F1 score
 
-# Random Forest Meta-Learning Ensemble for Financial Anomaly Detection: Achieving 70.37% F1 Score
-
-[![DOI](https://img.shields.io/badge/DOI-10.XXXX%2FXXXXX-blue)](https://doi.org/XXX)
-[![Paper](https://img.shields.io/badge/Paper-IEEE%20TNNLS-brightgreen)](https://ieeexplore.ieee.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![arXiv](https://img.shields.io/badge/arXiv-2025.XXXXX-b31b1b.svg)](https://arxiv.org/)
-
-**Authors:** [Your Name]<sup>1</sup>, [Co-author]<sup>1</sup>  
-**Affiliation:** <sup>1</sup>[Your University/Institution]  
-**Contact:** [your.email@institution.edu]  
-**Project Page:** [https://your-project-page.github.io](https://your-project-page.github.io)
-
-**Latest Update:** November 9, 2025  
-**Status:** Published in IEEE Transactions on Neural Networks and Learning Systems (2025)
 
 ---
 
