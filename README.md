@@ -4,9 +4,9 @@
 This project studies regime-conditioned detection of extreme financial anomalies using a factor-based Mixture of Experts (MoE) framework. By redefining anomalies as regime-conditional tail events and replacing black-box deep learning with economically interpretable factors, we investigate the separability of rare market stress events under non-stationary conditions. Our results show that anomaly *recall* remains stable across decades (94–100%), while *precision* is highly sensitive to macro-structural volatility shifts, most notably during the 2008 Global Financial Crisis. Under modern market conditions (2021–2025), the proposed framework exhibits high separability, while maintaining robust performance over a 10-year longitudinal evaluation. These findings highlight both the strengths and limitations of static regime definitions for long-horizon financial anomaly detection.
 
 **Contributions**:
-(i) a regime-conditioned definition of extreme financial anomalies,
-(ii) a factor-based Mixture of Experts architecture aligned with market regimes, and
-(iii) a longitudinal evaluation revealing recall invariance and precision degradation under regime drift.
+- (i) a regime-conditioned definition of extreme financial anomalies,
+- (ii) a factor-based Mixture of Experts architecture aligned with market regimes, and
+- (iii) a longitudinal evaluation revealing recall invariance and precision degradation under regime drift.
 
 ---
 
@@ -18,9 +18,9 @@ Deep Learning models (VAEs, Transformers) are empirically challenged in this dom
 
 This research addresses three specific questions:
 
-*   **RQ1**: Can extreme financial anomalies be defined rigorously without Gaussian assumptions?
-*   **RQ2**: Does explicitly isolating volatility regimes improve the separability of tail events compared to global baselines?
-*   **RQ3**: How stable is the detection performance across varying time horizons (5, 10, and 25 years)?
+- **RQ1**: Can extreme financial anomalies be defined rigorously without Gaussian assumptions?
+- **RQ2**: Does explicitly isolating volatility regimes improve the separability of tail events compared to global baselines?
+- **RQ3**: How stable is the detection performance across varying time horizons (5, 10, and 25 years)?
 
 ---
 
@@ -29,24 +29,24 @@ This research addresses three specific questions:
 The primary asset analyzed is the **S&P 500 Index** (`^GSPC`), representing the broad U.S. equity market. Data was sourced from public market feeds via `yfinance`.
 
 ### Data Preprocessing
-*   **Source**: Daily Open, High, Low, Close, Volume.
-*   **Windowing**: Rolling windows of length $L=128$ days (approx. 6 months).
-*   **Train/Test Split**: Strict temporal splitting (no shuffling) to prevent look-ahead bias.
+- **Source**: Daily Open, High, Low, Close, Volume.
+- **Windowing**: Rolling windows of length $L=128$ days (approx. 6 months).
+- **Train/Test Split**: Strict temporal splitting (no shuffling) to prevent look-ahead bias.
 
 *All features, regime assignments, and labels are computed using strictly backward-looking information to eliminate look-ahead bias.*
 
 **Table 1 – Dataset Summary**
 
-| Attribute     | Value                                     | Note |
-| ------------- | ----------------------------------------- | --- |
-| Asset         | S&P 500 Index (`^GSPC`)                   | Large Cap U.S. Equities |
-| Frequency     | Daily                                     | Close-to-Close |
-| Time Span 1   | 2000-01-01 to 2024-12-31                  | 25-Year Stress Test |
-| Time Span 2   | 2015-01-01 to 2025-01-01                  | 10-Year Validation |
-| Time Span 3   | 2021-01-01 to 2025-01-01                  | 5-Year Modern Era |
-| Initial Windows | 977 (Legacy Training Set)               | Used for Model Development |
-| Window Length | 128 days                                  | Captures medium-term trends |
-| Anomaly Rate  | ~2.15% ($q=0.98$)                         | Strict "Black Swan" definition |
+| Attribute | Value | Note |
+|-----------|-------|------|
+| Asset | S&P 500 Index (`^GSPC`) | Large Cap U.S. Equities |
+| Frequency | Daily | Close-to-Close |
+| Time Span 1 | 2000-01-01 to 2024-12-31 | 25-Year Stress Test |
+| Time Span 2 | 2015-01-01 to 2025-01-01 | 10-Year Validation |
+| Time Span 3 | 2021-01-01 to 2025-01-01 | 5-Year Modern Era |
+| Initial Windows | 977 (Legacy Training Set) | Used for Model Development |
+| Window Length | 128 days | Captures medium-term trends |
+| Anomaly Rate | ~2.15% ($q=0.98$) | Strict "Black Swan" definition |
 
 ---
 
@@ -83,14 +83,14 @@ To overcome the "Curse of Dimensionality" inherent in raw sequence modeling (128
 
 **Table 2 – Factor Taxonomy**
 
-| Factor Group       | Name                  | Description / Formula |
-| ------------------ | --------------------- | --------------------- |
-| **Trend**          | `Return_Trend`        | Mean log-return of the window. |
-| **Momentum**       | `Momentum_Factor`     | Proxy for RSI (Relative Strength Index). |
-| **Volatility**     | `Composite_Volatility`| Realized Volatility (Std Dev of returns). |
-| **Tail Risk**      | `Tail_Kurtosis`       | Excess Kurtosis ($ \frac{\mu_4}{\sigma^4} - 3 $) of the window. |
-| **Market Stats**   | `Latent_State_C`      | Microstructure proxy derived from High-Low range. |
-| **Context**        | `_lag1`, `_lag5`      | 1-day and 5-day lagged values of all factors. |
+| Factor Group | Name | Description / Formula |
+|--------------|------|----------------------|
+| **Trend** | `Return_Trend` | Mean log-return of the window. |
+| **Momentum** | `Momentum_Factor` | Proxy for RSI (Relative Strength Index). |
+| **Volatility** | `Composite_Volatility` | Realized Volatility (Std Dev of returns). |
+| **Tail Risk** | `Tail_Kurtosis` | Excess Kurtosis ($ \frac{\mu_4}{\sigma^4} - 3 $) of the window. |
+| **Market Stats** | `Latent_State_C` | Microstructure proxy derived from High-Low range. |
+| **Context** | `_lag1`, `_lag5` | 1-day and 5-day lagged values of all factors. |
 
 ---
 
@@ -99,16 +99,16 @@ To overcome the "Curse of Dimensionality" inherent in raw sequence modeling (128
 The system allows specialized sub-models ("Experts") to learn distinct decision boundaries for each regime, orchestrated by a deterministic Gating Network.
 
 ### Architecture Flow
-1.  **Input**: Raw Window $W_t$.
-2.  **Gating**: Calculate $\sigma_t$ $\rightarrow$ Determine Regime $R_t \in \{0, 1, 2\}$.
-3.  **Routing**: Forward Factors $F_t$ to Expert $E_{R_t}$.
-4.  **Inference**: $P(Anomaly) = E_{R_t}(F_t)$.
+1. **Input**: Raw Window $W_t$.
+2. **Gating**: Calculate $\sigma_t$ $\rightarrow$ Determine Regime $R_t \in \{0, 1, 2\}$.
+3. **Routing**: Forward Factors $F_t$ to Expert $E_{R_t}$.
+4. **Inference**: $P(Anomaly) = E_{R_t}(F_t)$.
 
 ### Why Random Forest Experts?
 We utilize **Shallow Random Forests** (Depth=5) for the experts.
-*   **Interpretability**: Decision paths can be mapped to economic rules (e.g., "If Vol is Low AND Momentum drops, Alarm").
-*   **Robustness**: Shallow tree ensembles provide a favorable bias–variance tradeoff in low-sample, high-noise financial settings.
-*   **Data Efficiency**: Performs well with limited samples ($N < 1000$).
+- **Interpretability**: Decision paths can be mapped to economic rules (e.g., "If Vol is Low AND Momentum drops, Alarm").
+- **Robustness**: Shallow tree ensembles provide a favorable bias–variance tradeoff in low-sample, high-noise financial settings.
+- **Data Efficiency**: Performs well with limited samples ($N < 1000$).
 
 ---
 
@@ -118,13 +118,13 @@ Validation is conducted using a strict "Walk-Forward" or "Unshuffled" approach t
 
 **Table 3 – Training Configuration**
 
-| Component      | Setting        | Rationale |
-| -------------- | -------------- | --------- |
-| **Base Model** | Random Forest  | Robust to non-linearities and scaling issues. |
-| **Depth**      | 5              | Regularization; forces learning general rules. |
-| **Class Weights**| Balanced     | $W_{pos} \propto \frac{1}{Freq_{pos}}$. Critical for 2% imbalance. |
-| **Criterion**  | Gini Impurity  | Standard classification optimization. |
-| **No SMOTE**   | True           | Synthetic interpolation is invalid in financial manifolds. |
+| Component | Setting | Rationale |
+|-----------|---------|-----------|
+| **Base Model** | Random Forest | Robust to non-linearities and scaling issues. |
+| **Depth** | 5 | Regularization; forces learning general rules. |
+| **Class Weights** | Balanced | $W_{pos} \propto \frac{1}{Freq_{pos}}$. Critical for 2% imbalance. |
+| **Criterion** | Gini Impurity | Standard classification optimization. |
+| **No SMOTE** | True | Synthetic interpolation is invalid in financial manifolds. |
 
 ---
 
@@ -137,33 +137,33 @@ The following tables present the performance metrics across different testing ho
 
 **Table 4 – 5-Year Test Results**
 
-| Metric    | Value      | Interpretation |
-| --------- | ---------- | -------------- |
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
 | **F1 Score** | **97.96%** | Very high separability of anomalies. |
-| Precision | 96.00%     | Low false positive rate. |
-| Recall    | 100.00%    | **Detected all labeled extreme events (24/24).** |
+| Precision | 96.00% | Low false positive rate. |
+| Recall | 100.00% | **Detected all labeled extreme events (24/24).** |
 
 ### 7.2 Longitudinal Validation (2015–2025)
 *Context: Includes "Volmageddon" (2018), Trade War (2019), Pandemic (2020).*
 
 **Table 5 – 10-Year Benchmark Results**
 
-| Metric    | Value      | Interpretation |
-| --------- | ---------- | -------------- |
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
 | **F1 Score** | **82.35%** | Robust journal-grade performance. |
-| Precision | 70.00%     | Moderate false positives during regime transitions. |
-| Recall    | 100.00%    | **Detected all labeled extreme events (49/49).** |
+| Precision | 70.00% | Moderate false positives during regime transitions. |
+| Recall | 100.00% | **Detected all labeled extreme events (49/49).** |
 
 ### 7.3 "Mega-Stress" Test (2000–2024)
 *Context: Includes Dot-Com Bubble (2000) and Global Financial Crisis (2008).*
 
 **Table 6 – 25-Year Stress Test Results**
 
-| Metric    | Value      | Interpretation |
-| --------- | ---------- | -------------- |
-| **F1 Score** | 56.12%     | Performance degradation due to non-stationarity. |
-| Precision | 39.93%     | 2008 Volatility skewed global thresholds. |
-| Recall    | **94.35%** | **Detected 117/124 extreme events over 25 years.** |
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| **F1 Score** | 56.12% | Performance degradation due to non-stationarity. |
+| Precision | 39.93% | 2008 Volatility skewed global thresholds. |
+| Recall | **94.35%** | **Detected 117/124 extreme events over 25 years.** |
 
 ---
 
@@ -173,13 +173,13 @@ To prove the necessity of each component, we incrementally added complexity to t
 
 **Table 7 – Ablation Study: Impact of Regime Conditioning and Factorization**
 
-| Model / Variant        | F1 Score | Δ vs Baseline | Diagnosis |
-| ---------------------- | -------- | ------------- | --------- |
-| **Standard Deviation Rule** | 11.8%    | -             | Fails due to heteroskedasticity. |
-| **ConvVAE (Deep Learning)**| 64.0%    | +52.2%        | Memorizes noise; fails normalization. |
-| **AnomalyTransformer** | 58.0%    | +46.2%        | Requires massive datasets; fails here. |
-| **Global Random Forest**| 70.3%   | +58.5%        | Good baseline, but confuses regimes. |
-| **Regime-Aware Factor MoE**| **95.4%**| **+83.6%**    | **Upper-bound under regime isolation.** |
+| Model / Variant | F1 Score | Δ vs Baseline | Diagnosis |
+|----------------|----------|---------------|-----------|
+| **Standard Deviation Rule** | 11.8% | - | Fails due to heteroskedasticity. |
+| **ConvVAE (Deep Learning)** | 64.0% | +52.2% | Memorizes noise; fails normalization. |
+| **AnomalyTransformer** | 58.0% | +46.2% | Requires massive datasets; fails here. |
+| **Global Random Forest** | 70.3% | +58.5% | Good baseline, but confuses regimes. |
+| **Regime-Aware Factor MoE** | **95.4%** | **+83.6%** | **Upper-bound under regime isolation.** |
 
 *This result represents an upper bound obtained under fixed regime definitions and is intended to demonstrate structural separability rather than deployable long-horizon performance.*
 
@@ -191,10 +191,10 @@ Using **SHAP (SHapley Additive exPlanations)**, we identified the dominant drive
 
 **Table 8 – Dominant Drivers per Regime**
 
-| Regime   | Key Driver        | Economic Interpretation |
-| -------- | ----------------- | ----------------------- |
-| **Low Vol**  | `Latent_State_C` (Liquidity) | In calm markets, crashes are driven by liquidity shocks (Flash Crashes). |
-| **Med Vol**  | `Return_Trend`    | In transitions, sustained negative drift signals danger. |
+| Regime | Key Driver | Economic Interpretation |
+|--------|-----------|------------------------|
+| **Low Vol** | `Latent_State_C` (Liquidity) | In calm markets, crashes are driven by liquidity shocks (Flash Crashes). |
+| **Med Vol** | `Return_Trend` | In transitions, sustained negative drift signals danger. |
 | **High Vol** | `Momentum_Factor` | In crises, panic selling (RSI collapse) defines the anomaly. |
 
 *SHAP values are aggregated at the factor level and averaged across samples within each regime to avoid over-interpretation of individual observations. The dominant drivers are consistent with established financial intuition regarding liquidity shocks and momentum-driven sell-offs.*
@@ -208,23 +208,23 @@ Using **SHAP (SHapley Additive exPlanations)**, we identified the dominant drive
 **Table 9 – Robustness Summary**
 
 | Horizon | F1 Score | Recall | Precision | Insight |
-| ------- | -------- | ------ | --------- | ------- |
-| **5-Year** | **98%** | **100%**| 96% | Perfect fit for modern microstructure. |
-| **10-Year**| **82%** | **100%**| 70% | Robust, with some regime friction. |
-| **25-Year**| 56%      | **94%** | 40% | **Stationarity Break**: 2008 GFC distorts global quantiles. |
+|---------|----------|--------|-----------|---------|
+| **5-Year** | **98%** | **100%** | 96% | Perfect fit for modern microstructure. |
+| **10-Year** | **82%** | **100%** | 70% | Robust, with some regime friction. |
+| **25-Year** | 56% | **94%** | 40% | **Stationarity Break**: 2008 GFC distorts global quantiles. |
 
 ### 10.2 Threats to Validity
-1.  **Regime Stationarity**: The 25-year test reveals that static quantile thresholds ($Q_{33}, Q_{66}$) fail when structural volatility shifts (e.g., 2008 > 2020). Future iterations must use **Rolling Quantiles**.
-2.  **Sample Size**: The number of true "Black Swans" is inherently small (<150 in 25 years). Statistical significance is hard to guarantee, though the 100% recall is compelling.
-3.  **Look-Ahead Bias**: Strictly controlled by using lagged features and unshuffled splits, but "global" normalization in the experimental phase is a potential (minor) leak, rectified in production by window-based scaling.
+1. **Regime Stationarity**: The 25-year test reveals that static quantile thresholds ($Q_{33}, Q_{66}$) fail when structural volatility shifts (e.g., 2008 > 2020). Future iterations must use **Rolling Quantiles**.
+2. **Sample Size**: The number of true "Black Swans" is inherently small (<150 in 25 years). Statistical significance is hard to guarantee, though the 100% recall is compelling.
+3. **Look-Ahead Bias**: Strictly controlled by using lagged features and unshuffled splits, but "global" normalization in the experimental phase is a potential (minor) leak, rectified in production by window-based scaling.
 
 ---
 
 ## 11. Practical Implications
 
 For financial practitioners and risk managers:
-1.  **Safety First**: The model prioritizes **Recall** (Sensitivity). It effectively never misses a crash. In risk management, a False Positive (False Alarm) is cheap, but a False Negative (Missed Crash) is ruinous.
-2.  **Deployment**: Suitable for use as an "Early Warning System" in real-time risk monitoring and portfolio protection systems.
+1. **Safety First**: The model prioritizes **Recall** (Sensitivity). It effectively never misses a crash. In risk management, a False Positive (False Alarm) is cheap, but a False Negative (Missed Crash) is ruinous.
+2. **Deployment**: Suitable for use as an "Early Warning System" in real-time risk monitoring and portfolio protection systems.
 
 ---
 
@@ -263,11 +263,11 @@ All figures are publication-ready and organized in two directories:
 
 ---
 
-## 14. Reproducibility
+## 13. Reproducibility
 
 ### Dependencies
-*   Python 3.8+
-*   `numpy`, `pandas`, `scikit-learn`, `yfinance`, `scipy`
+- Python 3.8+
+- `numpy`, `pandas`, `scikit-learn`, `yfinance`, `scipy`
 
 ### Quick Start
 ```bash
@@ -279,22 +279,23 @@ python scripts/validate_on_10y.py
 ```
 
 ### Key Configuration (Source Code)
-*   **Regime Logic**: `src/utils/volatility.py`
-*   **Factor Engine**: `src/data/construct_factors.py`
-*   **MoE Trainer**: `src/training/train_journal_model.py`
+- **Regime Logic**: `src/utils/volatility.py`
+- **Factor Engine**: `src/data/construct_factors.py`
+- **MoE Trainer**: `src/training/train_journal_model.py`
 
 ---
 
-## 15. Conclusion
+## 14. Conclusion
 
 This study demonstrates that the **Regime-Conditioned Mixture of Experts** is a compelling alternative architecture for financial anomaly detection compared to generic Deep Learning. By respecting the heteroskedastic nature of markets and engineering economically relevant factors, we observed **very high F1 scores** in relevant timeframes.
 
 While multi-decade stationarity remains a challenge for static thresholds, the invariant nature of the "Crisis Signature"—high volatility combined with momentum collapse—allows the model to maintain **>94% Recall** even across 25 years of changing market structures.
 
 ### Future Work
-*   **Adaptive Regimes**: Implementing HMMs (Hidden Markov Models) for dynamic regime switching.
-*   **Multi-Asset**: Extending the Factor MoE to Cryptocurrencies and Commodities.
+- **Adaptive Regimes**: Implementing HMMs (Hidden Markov Models) for dynamic regime switching.
+- **Multi-Asset**: Extending the Factor MoE to Cryptocurrencies and Commodities.
 
 ---
-**Repository of**: Financial-Anomaly-Detection-S-P500-Ensemble-Model
+
+**Repository**: Financial-Anomaly-Detection-S-P500-Ensemble-Model  
 **License**: MIT
