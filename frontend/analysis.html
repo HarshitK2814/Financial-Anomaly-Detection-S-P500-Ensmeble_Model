@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ablation & Expert Analysis | OasisAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="analysis.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h1 class="logo">Oasis<span>AI</span></h1>
+            <p class="subtitle">Expert & Ablation Analysis</p>
+            
+            <a href="index.html" class="btn" style="width: 100%; display: flex; justify-content: center; text-decoration: none; background: rgba(59, 130, 246, 0.15); border-color: var(--accent); color: var(--accent);">← Back to Dashboard</a>
+
+            <div class="control-group" style="margin: 20px 0;">
+                <label style="color: var(--accent); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Data Source</label>
+                <div class="toggle-group" style="display: flex; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px; margin-top: 8px;">
+                    <button id="src-live" class="toggle-btn active" style="flex:1; border:none; background:var(--accent); color:white; border-radius:6px; font-size:11px; padding:6px; cursor:pointer;">🔴 Live Demo</button>
+                    <button id="src-journal" class="toggle-btn" style="flex:1; border:none; background:transparent; color:var(--text-muted); border-radius:6px; font-size:11px; padding:6px; cursor:pointer;">🔬 Journal SOTA</button>
+                </div>
+                <p id="journal-notice" style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; display:none;">
+                    <span style="color:var(--success)">●</span> Comparing peer-reviewed SOTA (MoE) vs Monolithic Baseline. Sliders locked.
+                </p>
+            </div>
+
+            <div class="control-group" style="margin-top: 8px;">
+                <label for="a-dataset">Dataset</label>
+                <select id="a-dataset" class="dropdown">
+                    <option value="5y" selected>5-Year (2021-2025)</option>
+                    <option value="10y">10-Year (2015-2025)</option>
+                    <option value="25y">25-Year (2000-2025)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="a-q-threshold">Extreme Tail (q)</label>
+                <div class="slider-row">
+                    <input type="range" id="a-q-threshold" min="0.95" max="0.99" step="0.01" value="0.98">
+                    <span id="a-q-value" class="badge-normal">0.98</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Regime Separation</label>
+                <div class="slider-row input-row">
+                    <input type="number" id="a-vol-low" class="num-input" min="0.10" max="0.50" step="0.01" value="0.33"> 
+                    <span style="color:var(--text-muted)">/</span>
+                    <input type="number" id="a-vol-high" class="num-input" min="0.51" max="0.90" step="0.01" value="0.66">
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="stats-card" id="summary-card" style="display:none;">
+                <h3>Key Finding</h3>
+                <p id="summary-text" style="font-size: 13px; color: var(--text-muted); line-height: 1.6;"></p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Section 1: Ablation Study -->
+            <section class="analysis-section">
+                <h2 class="section-title">1. Ablation Study — MoE vs Single Model</h2>
+                <p class="section-desc">Directly compares the Regime-Conditioned Mixture of Experts against a monolithic Random Forest trained on all regimes simultaneously. This proves the core hypothesis of the paper.</p>
+                
+                <div class="ablation-grid">
+                    <div class="metric-card moe-card">
+                        <div class="card-header">
+                            <span class="card-icon">🧠</span>
+                            <h3>Mixture of Experts (Ours)</h3>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric-item">
+                                <span class="metric-label">Precision</span>
+                                <span class="metric-value" id="moe-precision">—</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Recall</span>
+                                <span class="metric-value" id="moe-recall">—</span>
+                            </div>
+                            <div class="metric-item primary">
+                                <span class="metric-label">F1 Score</span>
+                                <span class="metric-value" id="moe-f1">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="metric-card single-card">
+                        <div class="card-header">
+                            <span class="card-icon">🌲</span>
+                            <h3>Single Random Forest (Baseline)</h3>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric-item">
+                                <span class="metric-label">Precision</span>
+                                <span class="metric-value" id="single-precision">—</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Recall</span>
+                                <span class="metric-value" id="single-recall">—</span>
+                            </div>
+                            <div class="metric-item primary">
+                                <span class="metric-label">F1 Score</span>
+                                <span class="metric-value" id="single-f1">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-panel">
+                    <canvas id="ablationChart" height="280"></canvas>
+                </div>
+            </section>
+
+            <!-- Section 2: Per-Expert Performance -->
+            <section class="analysis-section">
+                <h2 class="section-title">2. Per-Expert Performance Breakdown</h2>
+                <p class="section-desc">Shows how each specialized expert performs within its assigned volatility regime, proving that regime-specific training captures unique market dynamics.</p>
+                
+                <div class="expert-grid">
+                    <div class="expert-card low-card">
+                        <h4>🟢 Low Volatility Expert (E₀)</h4>
+                        <div class="expert-stats">
+                            <div><span>Precision</span><span id="exp-low-prec">—</span></div>
+                            <div><span>Recall</span><span id="exp-low-rec">—</span></div>
+                            <div><span>F1 Score</span><span id="exp-low-f1">—</span></div>
+                            <div class="sample-count"><span>Samples</span><span id="exp-low-n">—</span></div>
+                        </div>
+                    </div>
+                    <div class="expert-card med-card">
+                        <h4>🟡 Medium Volatility Expert (E₁)</h4>
+                        <div class="expert-stats">
+                            <div><span>Precision</span><span id="exp-med-prec">—</span></div>
+                            <div><span>Recall</span><span id="exp-med-rec">—</span></div>
+                            <div><span>F1 Score</span><span id="exp-med-f1">—</span></div>
+                            <div class="sample-count"><span>Samples</span><span id="exp-med-n">—</span></div>
+                        </div>
+                    </div>
+                    <div class="expert-card high-card">
+                        <h4>🔴 High Volatility Expert (E₂)</h4>
+                        <div class="expert-stats">
+                            <div><span>Precision</span><span id="exp-high-prec">—</span></div>
+                            <div><span>Recall</span><span id="exp-high-rec">—</span></div>
+                            <div><span>F1 Score</span><span id="exp-high-f1">—</span></div>
+                            <div class="sample-count"><span>Samples</span><span id="exp-high-n">—</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-panel">
+                    <canvas id="expertChart" height="280"></canvas>
+                </div>
+            </section>
+
+            <!-- Section 3: Feature Importance Comparison -->
+            <section class="analysis-section">
+                <h2 class="section-title">3. Feature Importance Comparison Across Regimes</h2>
+                <p class="section-desc">Demonstrates that different factors drive anomalies in different market conditions — the key insight behind regime-conditioned routing.</p>
+                
+                <div class="chart-panel" style="height: 420px;">
+                    <canvas id="importanceChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="analysis.js"></script>
+</body>
+</html>

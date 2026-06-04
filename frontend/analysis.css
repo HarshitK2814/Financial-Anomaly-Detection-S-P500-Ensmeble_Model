@@ -1,0 +1,185 @@
+/* Analysis Page Specific Styles */
+
+.analysis-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 6px 0;
+}
+
+.section-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+}
+
+/* Ablation Grid */
+.ablation-grid {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+}
+
+.moe-card {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.05));
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.single-card {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(245, 158, 11, 0.03));
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.card-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.card-icon {
+    font-size: 22px;
+}
+
+.metric-row {
+    display: flex;
+    gap: 16px;
+}
+
+.metric-item {
+    flex: 1;
+    text-align: center;
+}
+
+.metric-item .metric-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-item .metric-value {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.metric-item.primary .metric-value {
+    color: var(--accent);
+}
+
+.vs-badge {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+}
+
+/* Expert Grid */
+.expert-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.expert-card {
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.expert-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.low-card { border-left: 3px solid var(--success); background: rgba(16, 185, 129, 0.04); }
+.med-card { border-left: 3px solid var(--warning); background: rgba(245, 158, 11, 0.04); }
+.high-card { border-left: 3px solid var(--danger); background: rgba(239, 68, 68, 0.04); }
+
+.expert-stats > div {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.expert-stats > div:last-child {
+    border-bottom: none;
+}
+
+.expert-stats > div span:first-child {
+    color: var(--text-muted);
+}
+
+.expert-stats > div span:last-child {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.sample-count span:last-child {
+    color: var(--text-muted) !important;
+    font-weight: 400 !important;
+    font-size: 12px;
+}
+
+/* Chart Panel */
+.chart-panel {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    height: 320px;
+}
+
+@media (max-width: 900px) {
+    .ablation-grid {
+        flex-direction: column;
+    }
+    .expert-grid {
+        grid-template-columns: 1fr;
+    }
+}

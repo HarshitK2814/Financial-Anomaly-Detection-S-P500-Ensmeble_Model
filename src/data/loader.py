@@ -66,21 +66,34 @@ def load_and_preprocess_data(
     regimes = assign_regime(vol_series)
 
     # ------------------------------------------------------------
-    # 3. Conditional quantile thresholds per regime
+    # 3 + 4. Anomaly labeling via rolling expanding-window quantile
+    #
+    # \u26a0\ufe0f  R2 LEAKAGE FIX: replaced regime-conditional full-dataset
+    # quantile thresholds with a rolling expanding-window quantile.
+    # Old code:  thresholds[r] = np.quantile(|price[regime_mask]|, q)
+    # This used ALL rows (including future test data) to set the threshold.
+    #
+    # Fix: at each time t the threshold is computed from |price[0:t]| only.
+    # min_periods=20 means the first 19 rows use the threshold from row 19
+    # (earliest available; minor init artifact, unavoidable for expanding windows).
     # ------------------------------------------------------------
-    thresholds: dict = {}
-    for r in np.unique(regimes):
-        mask = regimes == r
-        if not np.any(mask):
-            thresholds[int(r)] = np.nan
-            continue
-        thresholds[int(r)] = np.quantile(np.abs(price_series[mask]), quantile)
+    returns_abs    = pd.Series(np.abs(price_series))
+    rolling_thresh = (
+        returns_abs
+        .expanding(min_periods=20)
+        .quantile(quantile)
+        .bfill()       # fill first <20 NaN rows with earliest computed threshold
+        .values
+    )
+    anomaly_labels = (returns_abs.values > rolling_thresh).astype(int)
 
-    # ------------------------------------------------------------
-    # 4. Anomaly labeling
-    # ------------------------------------------------------------
-    anomaly_labels = (np.abs(price_series) > np.vectorize(thresholds.get)(regimes)).astype(int)
-    # Append as extra column
+    # Thresholds dict: per-regime mean of rolling threshold (API compatibility)
+    thresholds: dict = {
+        int(r): float(rolling_thresh[regimes == r].mean())
+        for r in np.unique(regimes)
+    }
+
+    # Append anomaly label as extra column
     data = np.column_stack((data, anomaly_labels))
 
     # ------------------------------------------------------------

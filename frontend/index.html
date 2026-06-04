@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S&P 500 Anomaly Engine | Mixture of Experts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h1 class="logo">Oasis<span>AI</span></h1>
+            <p class="subtitle">Factor-Based Anomaly Detection</p>
+            
+            <button id="btn-architecture" class="btn active" style="width: 100%; justify-content: center; margin: 0 0 6px 0; background: rgba(59, 130, 246, 0.2); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);">👁 View Architecture</button>
+            <a href="analysis.html" class="btn" style="width: 100%; display: flex; justify-content: center; text-decoration: none; background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: var(--success);">📊 Ablation & Expert Analysis</a>
+            
+            <div class="control-group" style="margin-bottom: 20px;">
+                <label style="color: var(--accent); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Data Source</label>
+                <div class="toggle-group" style="display: flex; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px; margin-top: 8px;">
+                    <button id="src-live" class="toggle-btn active" style="flex:1; border:none; background:var(--accent); color:white; border-radius:6px; font-size:11px; padding:6px; cursor:pointer;">🔴 Live Demo</button>
+                    <button id="src-journal" class="toggle-btn" style="flex:1; border:none; background:transparent; color:var(--text-muted); border-radius:6px; font-size:11px; padding:6px; cursor:pointer;">🔬 Journal SOTA</button>
+                </div>
+                <p id="journal-notice" style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; display:none;">
+                    <span style="color:var(--success)">●</span> Loading peer-reviewed ConvVAE+Transformer ensemble results (95.4% F1). Sliders disabled for scientific consistency.
+                </p>
+            </div>
+
+            <div class="regime-gauge">
+
+                <h3>Current Regime</h3>
+                <div class="gauge">
+                    <div id="regime-indicator" class="indicator medium">Medium Volatility</div>
+                </div>
+                <p class="gauge-desc">Dynamic volatility tracking over 128-day overlapping windows.</p>
+            </div>
+
+            <div class="stats-card">
+                <h3>Model Metrics Dynamic</h3>
+                <ul>
+                    <li><span>Recall</span> <span class="highlight" id="metric-recall">--%</span></li>
+                    <li><span>Precision</span> <span class="highlight" id="metric-precision">--%</span></li>
+                    <li><span>F1 Score</span> <span class="highlight" id="metric-f1">--%</span></li>
+                </ul>
+            </div>
+            
+            <div class="explanation-panel hidden" id="explain-panel">
+                <h3>Anomaly Detected</h3>
+                <p class="warning-text" style="margin-bottom: 8px;">Extreme Tail Event Triggered.</p>
+                <div class="radar-container" style="position: relative; height:180px; width:100%; margin: 16px 0;">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="factors">
+                    <h4>Primary Drivers</h4>
+                    <ul id="driver-list">
+                        <!-- Drivers injected here -->
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="app-header">
+                <div class="header-titles">
+                    <h2 id="timeline-title">Performance Timeline</h2>
+                </div>
+                
+                <div class="dynamic-controls">
+                    <div class="control-group">
+                        <label for="dataset-select">Time Horizon</label>
+                        <select id="dataset-select" class="dropdown">
+                            <option value="5y" selected>5-Year (2021-2025)</option>
+                            <option value="10y">10-Year (2015-2025)</option>
+                            <option value="25y">25-Year (2000-2025)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="q-threshold">Extreme Tail (q-value)</label>
+                        <div class="slider-row">
+                            <input type="range" id="q-threshold" min="0.95" max="0.99" step="0.01" value="0.98">
+                            <span id="q-value" class="badge-normal">0.98</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Regime Separation (quantiles)</label>
+                        <div class="slider-row input-row">
+                            <input type="number" id="vol-low" class="num-input" min="0.10" max="0.50" step="0.01" value="0.33"> 
+                            <span style="color:var(--text-muted)">/</span>
+                            <input type="number" id="vol-high" class="num-input" min="0.51" max="0.90" step="0.01" value="0.66">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="chart-container">
+                <div id="chart-loading" class="loading-overlay">
+                    <div class="spinner"></div>
+                    <span>Re-training Experts...</span>
+                </div>
+                <canvas id="timelineChart"></canvas>
+            </div>
+
+            <div class="gating-chart-container">
+                <canvas id="gatingChart"></canvas>
+            </div>
+
+            <div class="table-container">
+                <h3>Recent Detections</h3>
+                <table id="anomalyTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Regime</th>
+                            <th>Prediction</th>
+                            <th>Factor 1</th>
+                            <th>Factor 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Architecture Modal -->
+    <div id="arch-modal" class="loading-overlay" style="z-index: 100;">
+        <div class="modal-content" style="position: relative; max-width: 900px; width: 90%; background: var(--bg-dark); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h2 style="margin:0;">Systematic Architecture</h2>
+                <span id="close-modal" style="cursor: pointer; font-size: 24px; color: var(--text-muted);">&times;</span>
+            </div>
+            <img src="assets/architecture.png" alt="Systematic Architecture" style="width:100%; border-radius: 8px; object-fit: contain; max-height: 75vh;">
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

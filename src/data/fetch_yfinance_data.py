@@ -67,12 +67,26 @@ def calculate_technical_indicators(df):
     
     return df[['Log_Ret', 'RSI', 'Vol_20', 'Vol_Change', 'HL_Range', 'MACD', 'BB_Pos', 'Skew_20', 'Kurt_20', 'Lag_Ret']]
 
-def make_windows(data, window_size=128):
+def make_windows(data, window_size=128, stride=1):
+    """
+    Create sliding windows from a 2-D array.
+
+    Parameters
+    ----------
+    stride : int
+        Step size between consecutive windows.
+        Use stride=1 for fully-overlapping windows (default, backwards-compat).
+        Use stride=window_size for non-overlapping windows, which eliminates
+        direct temporal overlap between train and test splits in CV.
+        NOTE: Even with stride=1, a purge gap of >= window_size rows should
+        be enforced between train and test in any CV splitter to prevent
+        look-ahead leakage through overlapping windows.
+    """
     windows = []
-    # Drop NaNs
+    # Drop rows with any NaN before windowing
     data = data[~np.isnan(data).any(axis=1)]
-    
-    for i in range(len(data) - window_size):
+
+    for i in range(0, len(data) - window_size, stride):
         windows.append(data[i : i + window_size])
     return np.array(windows)
 
@@ -115,14 +129,14 @@ def main():
     feats.replace([np.inf, -np.inf], 0, inplace=True)
     feats.fillna(0, inplace=True)
     
-    # 3. Normalize (Z-Score)
-    # Important: Normalize carefully. Global normalization might peek ahead?
-    # For this experiment, global normalization is acceptable as we are testing regime logic separability
-    feats_norm = (feats - feats.mean()) / (feats.std() + 1e-8)
-    
-    # 4. Windowing
-    print("🪟 Creating Windows (128 steps)...")
-    X_windows = make_windows(feats_norm.values, window_size=128)
+    # 3. Windowing — raw (un-normalized) features saved.
+    # ⚠️  LEAKAGE FIX: Global Z-score normalization removed.
+    # Computing mean/std over the full series and applying before windowing
+    # constitutes look-ahead bias because statistics from future (test) rows
+    # leak into past (train) windows.  Normalization MUST be performed inside
+    # each CV fold: fit StandardScaler on X_train only, then transform X_test.
+    print("🪟 Creating Windows (128 steps, stride=1)...")
+    X_windows = make_windows(feats.values, window_size=128, stride=1)
     
     print(f"Final Tensor Shape: {X_windows.shape}")
     

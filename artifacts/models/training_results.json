@@ -1,0 +1,62 @@
+{
+  "RF": {
+    "Low": {
+      "f1": 0.0,
+      "n_train": 256,
+      "n_val": 65,
+      "anomaly_rate": 0.03115264797507788
+    },
+    "Med": {
+      "f1": 0.0,
+      "n_train": 256,
+      "n_val": 64,
+      "anomaly_rate": 0.015625
+    },
+    "High": {
+      "f1": 1.0,
+      "n_train": 264,
+      "n_val": 67,
+      "anomaly_rate": 0.01812688821752266
+    }
+  },
+  "XGBoost": {
+    "Low": {
+      "f1": 0.0,
+      "n_train": 256,
+      "n_val": 65,
+      "anomaly_rate": 0.03115264797507788
+    },
+    "Med": {
+      "f1": 0.0,
+      "n_train": 256,
+      "n_val": 64,
+      "anomaly_rate": 0.015625
+    },
+    "High": {
+      "f1": 1.0,
+      "n_train": 264,
+      "n_val": 67,
+      "anomaly_rate": 0.01812688821752266
+    }
+  },
+  "LightGBM": {
+    "Low": {
+      "f1": 0.0,
+      "n_train": 256,
+      "n_val": 65,
+      "anomaly_rate": 0.03115264797507788
+    },
+    "Med": {
+      "f1": 0.0,
+      "n_train": 256,
+      "n_val": 64,
+      "anomaly_rate": 0.015625
+    },
+    "High": {
+      "f1": 1.0,
+      "n_train": 264,
+      "n_val": 67,
+      "anomaly_rate": 0.01812688821752266
+    }
+  }
+}
