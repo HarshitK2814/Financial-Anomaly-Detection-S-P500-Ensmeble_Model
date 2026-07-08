@@ -22,9 +22,8 @@ dist/
 build/
 *.egg-info/
 
-# Large data files (keep in artifacts/ but exclude from git if too large)
-# Uncomment if you want to exclude large numpy files:
-# artifacts/*.npy
+# Data artifacts (archived separately on Zenodo: 10.5281/zenodo.21257024)
+artifacts/
 
 # Logs
 *.log
@@ -40,3 +39,24 @@ Thumbs.db
 # Temporary files
 *.tmp
 tmp/
+tmp_check.py
+
+# Internal planning docs / non-project PDFs
+MASTER_PLAN.md
+NEXT_SESSION.md
+REDEVELOPMENT_BACKLOG.md
+PUBLICATION_AUDIT.md
+JOURNAL_TARGETING.md
+Kronos.pdf
+
+# One-off dev/debug scripts
+_citecheck.py
+_refcheck.py
+_refcheck2.py
+
+# Stale/archived figure copies
+correct figures/_archive/
+
+# Local Zenodo staging (not part of the code archive)
+zenodo_dataset/
+zenodo_dataset.zip
