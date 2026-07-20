@@ -22,9 +22,8 @@
 \usepackage{silence}
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue]{hyperref}
 
-% Interact-specific citation support
-\usepackage[numbers,sort&compress]{natbib}
-\bibpunct[, ]{[}{]}{,}{n}{,}{,}
+% Interact-specific citation support updated for Chicago Author-Date
+\usepackage[authoryear,round]{natbib}
 \renewcommand\bibfont{\fontsize{10}{12}\selectfont}
 
 \usepackage{epstopdf} % To incorporate .eps illustrations
@@ -45,8 +44,8 @@
 \title{Explainable Regime Conditioned Mixture of Experts for Financial Anomaly Detection, Risk Capital Calibration, and Cross Market Validation}
 
 \author{
-\name{Prashant Hemrajani\textsuperscript{a}\thanks{CONTACT Prashant Hemrajani. Email: prashant.hemrajani@jaipur.manipal.edu}, Harshit Kumar\textsuperscript{a}, Sarthak Kumar\textsuperscript{a}, Shashank Shekhar\textsuperscript{a}, Varsha Himthani\textsuperscript{b}, Sayan Mahalik\textsuperscript{a}, and Manoj Kumar Bohra\textsuperscript{a}}
-\affil{\textsuperscript{a}Department of IoT and Intelligent Systems, Manipal University Jaipur, Jaipur, Rajasthan, India. Emails: prashant.hemrajani@jaipur.manipal.edu, harshit.23fe10cii00175@muj.manipal.edu, sarthak.23fe10cii00229@muj.manipal.edu, shashank.23fe10cii00220@muj.manipal.edu, sayanmahalik6@gmail.com; \textsuperscript{b}School of Computer Science Engineering and Technology, Bennett University, Greater Noida, Uttar Pradesh, India. Email: varsha.himthani@gmail.com}
+\name{Prashant Hemrajani\textsuperscript{a}, Harshit Kumar\textsuperscript{a}, Sarthak Kumar\textsuperscript{a}, Shashank Shekhar\textsuperscript{a}, Varsha Himthani\textsuperscript{b}, Sayan Mahalik\textsuperscript{a}, and Manoj Kumar Bohra\textsuperscript{a}\thanks{CONTACT Manoj Kumar Bohra. Email: manojkumar.bohra@jaipur.manipal.edu}}
+\affil{\textsuperscript{a}Department of IoT and Intelligent Systems, Manipal University Jaipur, Jaipur, Rajasthan, India. Emails: prashant.hemrajani@jaipur.manipal.edu, harshit.23fe10cii00175@muj.manipal.edu, sarthak.23fe10cii00229@muj.manipal.edu, shashank.23fe10cii00220@muj.manipal.edu, sayanmahalik6@gmail.com, manojkumar.bohra@jaipur.manipal.edu; \textsuperscript{b}School of Computer Science Engineering and Technology, Bennett University, Greater Noida, Uttar Pradesh, India. Email: varsha.himthani@gmail.com}
 }
 
 \maketitle
@@ -62,9 +61,9 @@ Financial anomaly detection; mixture of experts; volatility regimes; extreme val
 
 \section{Introduction}
 Financial markets can be considered complex adaptation systems wherein return distribution is known to display
-non-Gaussian behavior, heteroskedasticity, and structure altering regimes~\cite{mandelbrot1963variation, cont2001empirical}. The volatility clustering, fat-tails, and
+non-Gaussian behavior, heteroskedasticity, and structure altering regimes~\citep{mandelbrot1963variation, cont2001empirical}. The volatility clustering, fat-tails, and
 leverage effect destroy stationarity assumptions inherent in
-conventional methods for anomaly detection~\cite{bouchaud2001more, fama1970efficient}. Identification of anomalies within such markets is far from being a
+conventional methods for anomaly detection~\citep{bouchaud2001more, fama1970efficient}. Identification of anomalies within such markets is far from being a
 conceptual task, as the occurrence of tail events has caused
 severe real failures ranging from Black Monday in 1987 up to
 the recent COVID-19 market crash in 2020.
@@ -77,21 +76,21 @@ be absolutely normal. Inability of virtually any existing method to take into ac
 that there is a problem in detecting the anomaly, in which
 magnitude does matter. Parametric techniques that employ
 Z-score or control charts operate with thresholds for a non-stationary process, resulting in excessive false alerts or lack
-of detection during crisis~\cite{chandola2009anomaly}. Approaches using conditional
-volatility such as GARCH~\cite{bollerslev1986a} and EGARCH~\cite{nelson1991egarch} partly resolve
-the heteroskedasticity issue, as their initial purpose was volatility estimation~\cite{engle1982arch, hansen1994autoregressive}.
+of detection during crisis~\citep{chandola2009anomaly}. Approaches using conditional
+volatility such as GARCH~\citep{bollerslev1986a} and EGARCH~\citep{nelson1991egarch} partly resolve
+the heteroskedasticity issue, as their initial purpose was volatility estimation~\citep{engle1982arch, hansen1994autoregressive}.
 
 The advent of deep learning techniques has led to an era
-of anomaly detectors built around autoencoders, variational autoencoders (VAEs), and transformers with good reconstruction capability within the sample~\cite{darban2023deep, pang2021deep}. Nevertheless, these methods share three major structural issues. First,
+of anomaly detectors built around autoencoders, variational autoencoders (VAEs), and transformers with good reconstruction capability within the sample~\citep{darban2023deep, pang2021deep}. Nevertheless, these methods share three major structural issues. First,
 the low occurrence rate of tail events (approximately 2\%)
 results in serious class imbalance problems. Second, normalization of inputs leads to the loss of information related
-to the absolute value of the return, crucial in crash detection~\cite{crepey2022anoma}. Third, black box algorithms provide no justification for the economy behind their decisions, thus violating
-Basel III/IV standards~\cite{arrieta2020explainable}. From the empirical side, deep
+to the absolute value of the return, crucial in crash detection~\citep{crepey2022anoma}. Third, black box algorithms provide no justification for the economy behind their decisions, thus violating
+Basel III/IV standards~\citep{arrieta2020explainable}. From the empirical side, deep
 methods over-fit sample properties and show poor results over
-time as structural breaks affect the data generation process~\cite{liu2024times}.
+time as structural breaks affect the data generation process~\citep{liu2024times}.
 
 One common feature in all these issues is the lack of regime
-structure explicitly introduced in the model. Returns distributions change depending on the volatility regimes~\cite{hamilton1989a, ang2002regime, guidolin2011markov},
+structure explicitly introduced in the model. Returns distributions change depending on the volatility regimes~\citep{hamilton1989a, ang2002regime, guidolin2011markov},
 yet classical econometrics and deep learning methods alike fail
 to include this regime structure in the definition of anomalous
 observations. The resulting model suffers from specification
@@ -108,7 +107,7 @@ anomalies are defined as regime-specific tail events where
 the threshold of detection depends on the economic condition at hand. In addition, each expert trains separately on a
 limited set of economic factors such as trend, momentum,
 volatility, tail risk, and liquidity using 128-day rolling windows. The gating function ensures that our segmentation is
-economically grounded~\cite{jacobs1991moe, alkilane2024mixma}.
+economically grounded~\citep{jacobs1991moe, alkilane2024mixma}.
 
 Analysis using 9.7 years of daily S\&P~500 return
 data from 2016 to 2025 identifies three practical findings.
@@ -179,21 +178,21 @@ Section~\ref{sec:multimodel} shows multimodel classification comparison, economi
 Financial anomaly detection involves four ongoing research
 areas: classical statistical methods, deep learning-based time series
 models, regime-aware financial models, and interpretable machine
-learning~\cite{liu2024times, chandola2009anomaly}. However, unlike generic anomaly detection, financial data have heteroskedasticity, regime changes, extremely imbalanced classes, and structural breaks. All four streams will be
+learning~\citep{liu2024times, chandola2009anomaly}. However, unlike generic anomaly detection, financial data have heteroskedasticity, regime changes, extremely imbalanced classes, and structural breaks. All four streams will be
 described in turn.
 
 \subsection{Statistical/Econometric Methods}
 
 Initial attempts at anomaly detection based on parametric
-models that assumed stationary distribution of returns~\cite{mandelbrot1963variation, cont2001empirical, fama1970efficient}.
+models that assumed stationary distribution of returns~\citep{mandelbrot1963variation, cont2001empirical, fama1970efficient}.
 The Z-score, control charts, and standard deviation rule mark the
 anomaly as deviation from a fixed reference distribution. While
 computationally fast, these methods cannot address issues of non
 stationarity or volatility clustering and hence provide excessive false
 positives during calm times and fail to detect real anomalies in a
-crisis situation~\cite{engle1982arch, bollerslev1986a}.
+crisis situation~\citep{engle1982arch, bollerslev1986a}.
 
-Conditional volatility models such as GARCH~\cite{bollerslev1986a}, EGARCH~\cite{nelson1991egarch}
+Conditional volatility models such as GARCH~\citep{bollerslev1986a}, EGARCH~\citep{nelson1991egarch}
 and stochastic volatility models use variance which is time varying
 and detect anomaly relative to the conditional distribution. However, these models were developed for volatility forecasting and risk
 management purposes and thus are evaluated by different criteria than precision and recall.
@@ -203,37 +202,37 @@ management purposes and thus are evaluated by different criteria than precision 
 The concept of financial market regimes is widely used in literature
 for addressing topics such as the volatility clustering phenomenon and
 the business cycle effect. Models based on switching regimes, such
-as the Markov Switching Models~\cite{hamilton1989a} and Hidden Markov Models,
+as the Markov Switching Models~\citep{hamilton1989a} and Hidden Markov Models,
 have usually been used for identifying hidden regimes, such as bull
-market regime, bear market regime, and crisis regimes~\cite{ang2002regime, guidolin2011markov}.
+market regime, bear market regime, and crisis regimes~\citep{ang2002regime, guidolin2011markov}.
 While simpler and deterministic techniques have been devised that use
 realized volatility quantiles or variance cutoffs, in most of the existing
 researches, the market regime information has not been employed in
 either refining the anomaly concept or for the evaluation phase.
 
 Current MoE architectures in finance belong to one of two categories:
-forecasting-related Mixture of Experts (MoE) models~\cite{alkilane2024mixma}
+forecasting-related Mixture of Experts (MoE) models~\citep{alkilane2024mixma}
 where the inputs go to expert predictors, but return/price prediction is the main objective.
 None offers regulatory validation. The work which is most similar to ours is
-Fan and Li~\cite{fan2025expla}, where an adaptive MoE model employing a GNN-based
+Li and Fan~\citep{fan2025expla}, where an adaptive MoE model employing a GNN-based
 gating network has been used for deviation detection from local equity.
 It employs four experts, whose choice is arbitrary, operates on short-term OOS
 test sets without leakage-proof time-series protocol, and lacks EVT/capital adequacy analysis. The present work takes a structurally different path: regimes are defined on an observable economic variable (realized volatility), anomalies are redefined conditionally on the current regime rather than against a global distribution, and formal regulatory validation via Kupiec backtests and Basel~III capital adequacy analysis is provided as a primary contribution.
 
 \subsection{Deep Learning for Anomaly Detection}
 
-Anomaly detection using deep learning algorithms has progressed due to developments in representation learning~\cite{darban2023deep, pang2021deep}. Recurrent networks, convolutional networks, variational autoencoders, and transformers exhibit high in-sample performance on financial time-series data~\cite{su2025anoma, wu2024anoma, cao2024autom}. Three structural issues prevent them from being used effectively in financial applications. First, rare tail observations (about 2\%) cause very severe class imbalance. Second, normalization of inputs prevents them from detecting the actual magnitude of returns that is critical for crash detection. Third, deep learning algorithms typically learn noise rather than economic structure, especially in small samples. The development of attention mechanisms, ensembles, and focal loss has led to improvements in in-sample performance but failed to solve the interpretability problem, which is a hard constraint under Basel~III/IV~\cite{arrieta2020explainable}. Long-term forecast performance is poor because regimes shift invalidating in-sample patterns~\cite{liu2024times}.
+Anomaly detection using deep learning algorithms has progressed due to developments in representation learning~\citep{darban2023deep, pang2021deep}. Recurrent networks, convolutional networks, variational autoencoders, and transformers exhibit high in-sample performance on financial time-series data~\citep{su2025anoma, wu2024anoma, cao2024autom}. Three structural issues prevent them from being used effectively in financial applications. First, rare tail observations (about 2\%) cause very severe class imbalance. Second, normalization of inputs prevents them from detecting the actual magnitude of returns that is critical for crash detection. Third, deep learning algorithms typically learn noise rather than economic structure, especially in small samples. The development of attention mechanisms, ensembles, and focal loss has led to improvements in in-sample performance but failed to solve the interpretability problem, which is a hard constraint under Basel~III/IV~\citep{arrieta2020explainable}. Long-term forecast performance is poor because regimes shift invalidating in-sample patterns~\citep{liu2024times}.
 
 \subsection{Interpretable Machine Learning in Finance}
 \label{subsec:rel_interpretable}
 
 Interpretability is mandatory by regulation in finance, not just a
-preference~\cite{arrieta2020explainable}. Linear factor models, decision trees, and
-shallow ensemble approaches~\cite{breiman2001random, friedman2001greedy} are still in use because
+preference~\citep{arrieta2020explainable}. Linear factor models, decision trees, and
+shallow ensemble approaches~\citep{breiman2001random, friedman2001greedy} are still in use because
 they generate interpretable decision rules, even though other,
 more flexible, neural networks can be applied. Financial theories
-are successfully utilized to construct highly predictive input representations through factor-based representations. Instance-wise post-hoc explanations by means of the SHAP~\cite{lundberg2017shap}
-and LIME~\cite{ribeiro2016lime} methods are gaining ground in finance~\cite{wang2024adapt},
+are successfully utilized to construct highly predictive input representations through factor-based representations. Instance-wise post-hoc explanations by means of the SHAP~\citep{lundberg2017shap}
+and LIME~\citep{ribeiro2016lime} methods are gaining ground in finance~\citep{wang2024adapt},
 but the instability of the latter for rare events renders aggregative explanations by factor and regime much more desirable.
 
 Our approach tackles the issue on two levels: factor-based
@@ -254,26 +253,26 @@ consistency measurement that has not been addressed yet.
 \toprule
 \textbf{Author(s)} & \textbf{Year} & \textbf{Method} & \textbf{Dataset} & \textbf{Anomaly Target} & \textbf{Eval Paradigm} & \textbf{Regime Aware} & \textbf{XAI} & \textbf{Key Limitation} \\
 \midrule
-Liu et al.\ \cite{liu2008isolation} & 2008 & Isolation Forest & Syn./ HTTP & Global Outlier & In-sample Fit & No & No & No temporal structure; global threshold \\
-Hamilton \cite{hamilton1989a} & 1989 & Markov-Switching & US GNP & Latent State Shift & In-Sample Fit & Yes & No & Two regimes only; constant transitions \\
-Chandola et al.\ \cite{chandola2009anomaly} & 2009 & Survey Methods & Multiple & Academic Domain & Literature Review & No & No & No finance-specific evaluation \\
-Cont \cite{cont2001empirical} & 2001 & Stylized Facts & Glob.\ Equities & Empirical Fact & Descriptive Stats & No & N/A & Descriptive; no detection framework \\
-Cr\'{e}pey et al.\ \cite{crepey2022anoma} & 2022 & PCA + Neural Net & Syn.\ Finance & Global Deviation & Short-Horizon OOS & No & Low & Relies on synthetic data; supervised \\
-Song \cite{song2023anoma} & 2023 & VAE-Transformer & DeFi & Recon\-struction & Short-Horizon OOS & No & Low & Single DeFi dataset; no regime analysis \\
-Darban et al.\ \cite{darban2023deep} & 2024 & Survey: Deep TSAD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized evaluation protocol \\
-Wang \cite{wang2024adapt} & 2024 & SHAP + Ensemble & CIS Fraud & Global Deviation & Single-Period OOS & No & High & No regime conditioning; fraud-specific \\
-Cao \& Guo \cite{cao2024autom} & 2024 & RL-based selection & SWaT/ COBT & Recon\-struction & Short-Horizon OOS & No & Low & Threshold-dependent; no financial regimes \\
-Fan \& Li \cite{fan2025expla} & 2025 & Adaptive MoE + GNN & US equities & Local Deviation & Short-Horizon OOS & Yes & High & Fixed four-expert taxonomy; no VaR analysis \\
-Bakumenko \cite{bakumenko2025advan} & 2025 & LLM Embeddings & Gen.\ Ledger & Semantic Outlier & Short-Horizon OOS & No & Low & Limited to accounting data \\
-Su \cite{su2025anoma} & 2025 & WV+LSTM+\newline Transformer & S\&P/ Binance & Recon\-struction & Short-Horizon OOS & No & No & Static anomaly thresholds \\
-Zhou et al.\ \cite{zhou2025kanad} & 2025 & KAN-AD (Fourier) & KPI/ SMAP & Recon\-struction & Short-Horizon OOS & No & Low & Univariate focus; no financial regimes \\
-Alkilane et al.\ \cite{alkilane2024mixma} & 2024 & MixMamba MoE & ETT/ Weather & Point Prediction & Short-Horizon OOS & Yes & No & Forecasting only; no anomaly detection \\
-Luo \cite{luo2025robus} & 2025 & Causal Hypergraph & Yelp/ Amazon & Global Outlier & Cross-Sectional & No & Med & Complex; fraud-specific; not time-series \\
-Pang et al.\ \cite{pang2021deep} & 2021 & Survey: Deep AD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized financial evaluation; regime shifts ignored \\
-Breiman \cite{breiman2001random} & 2001 & Random Forest & UCI / Finance & Global Outlier & Cross-Val OOB & No & Med & Static global threshold; no temporal or regime structure \\
-Sch\"{o}lkopf et al.\ \cite{scholkopf2001estimating} & 2001 & One-Class SVM & UCI/ Synthetic & Density Support & In-Sample CV & No & Low & Kernel choice sensitive; quadratic training cost; no temporal dynamics \\
-Engle \& Manganelli \cite{engle2004caviar} & 2004 & CAViaR Reg.\ Quantile & US/UK Equities & VaR Tail & Rolling OOS & Implicit & Low & Predicts conditional quantile only; no binary anomaly classification \\
-Wu et al.\ \cite{wu2024anoma} & 2024 & RNN + Latent VAR & Financial TS & Recon\-struction & Short-Horizon OOS & No & No & Black-box; requires supervised labels; no regime conditioning \\
+Liu et al.\ \citep{liu2008isolation} & 2008 & Isolation Forest & Syn./ HTTP & Global Outlier & In-sample Fit & No & No & No temporal structure; global threshold \\
+Hamilton \citep{hamilton1989a} & 1989 & Markov-Switching & US GNP & Latent State Shift & In-Sample Fit & Yes & No & Two regimes only; constant transitions \\
+Chandola et al.\ \citep{chandola2009anomaly} & 2009 & Survey Methods & Multiple & Academic Domain & Literature Review & No & No & No finance-specific evaluation \\
+Cont \citep{cont2001empirical} & 2001 & Stylized Facts & Glob.\ Equities & Empirical Fact & Descriptive Stats & No & N/A & Descriptive; no detection framework \\
+Cr\'{e}pey et al.\ \citep{crepey2022anoma} & 2022 & PCA + Neural Net & Syn.\ Finance & Global Deviation & Short-Horizon OOS & No & Low & Relies on synthetic data; supervised \\
+Song \citep{song2023anoma} & 2023 & VAE-Transformer & DeFi & Recon\-struction & Short-Horizon OOS & No & Low & Single DeFi dataset; no regime analysis \\
+Darban et al.\ \citep{darban2023deep} & 2024 & Survey: Deep TSAD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized evaluation protocol \\
+Wang \citep{wang2024adapt} & 2024 & SHAP + Ensemble & CIS Fraud & Global Deviation & Single-Period OOS & No & High & No regime conditioning; fraud-specific \\
+Cao \& Guo \citep{cao2024autom} & 2024 & RL-based selection & SWaT/ COBT & Recon\-struction & Short-Horizon OOS & No & Low & Threshold-dependent; no financial regimes \\
+Li \& Fan \citep{fan2025expla} & 2025 & Adaptive MoE + GNN & US equities & Local Deviation & Short-Horizon OOS & Yes & High & Fixed four-expert taxonomy; no VaR analysis \\
+Bakumenko \citep{bakumenko2025advan} & 2025 & LLM Embeddings & Gen.\ Ledger & Semantic Outlier & Short-Horizon OOS & No & Low & Limited to accounting data \\
+Su \citep{su2025anoma} & 2025 & WV+LSTM+\newline Transformer & S\&P/ Binance & Recon\-struction & Short-Horizon OOS & No & No & Static anomaly thresholds \\
+Zhou et al.\ \citep{zhou2025kanad} & 2025 & KAN-AD (Fourier) & KPI/ SMAP & Recon\-struction & Short-Horizon OOS & No & Low & Univariate focus; no financial regimes \\
+Alkilane et al.\ \citep{alkilane2024mixma} & 2024 & MixMamba MoE & ETT/ Weather & Point Prediction & Short-Horizon OOS & Yes & No & Forecasting only; no anomaly detection \\
+Luo \citep{luo2025robus} & 2025 & Causal Hypergraph & Yelp/ Amazon & Global Outlier & Cross-Sectional & No & Med & Complex; fraud-specific; not time-series \\
+Pang et al.\ \citep{pang2021deep} & 2021 & Survey: Deep AD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized financial evaluation; regime shifts ignored \\
+Breiman \citep{breiman2001random} & 2001 & Random Forest & UCI / Finance & Global Outlier & Cross-Val OOB & No & Med & Static global threshold; no temporal or regime structure \\
+Sch\"{o}lkopf et al.\ \citep{scholkopf2001estimating} & 2001 & One-Class SVM & UCI/ Synthetic & Density Support & In-Sample CV & No & Low & Kernel choice sensitive; quadratic training cost; no temporal dynamics \\
+Engle \& Manganelli \citep{engle2004caviar} & 2004 & CAViaR Reg.\ Quantile & US/UK Equities & VaR Tail & Rolling OOS & Implicit & Low & Predicts conditional quantile only; no binary anomaly classification \\
+Wu et al.\ \citep{wu2024anoma} & 2024 & RNN + Latent VAR & Financial TS & Recon\-struction & Short-Horizon OOS & No & No & Black-box; requires supervised labels; no regime conditioning \\
 \bottomrule
 \end{tabular}%
 }}
@@ -333,7 +332,7 @@ such a conditional definition using rigorous regulatory risk measures through
 EVT-based VaR backtesting and Basel~III capital requirements; and (c) explains
 anomalies conditional on the current regime using a statistical model that
 formally quantifies the consistency of regime-specific explanations. Among
-concurrent studies, Fan and Li~\cite{fan2025expla} utilize an adaptive MoE
+concurrent studies, Li and Fan~\citep{fan2025expla} utilize an adaptive MoE
 approach for equity-return prediction with a fixed taxonomy of four experts,
 while neither conditioning anomaly definitions on regimes nor performing
 capital miscalibration assessment under leakage-free protocols.
@@ -341,7 +340,7 @@ capital miscalibration assessment under leakage-free protocols.
 % ===================== METHODOLOGY =====================
 \section{Methodology}
 \label{sec:methodology}
-This subsection gives a description of the proposed RC-MoE framework. The framework has three modules: (i) a factor decomposition process which decomposes each rolling return window into eight economic factors (trends, momentum, volatility, hidden regime, and tail risks); (ii) a gated model with adaptive voting that fuses outputs of the three independent volatility detectors (rolling quantile, Gaussian HMM, and static quantile) with confidence weighting; and (iii) a regime-dependent meta-model, which assigns the factor vectors to appropriate experts based on the regime condition. In each rolling window, the framework conducts factor analysis, gating, and regime-dependent expert scoring to calculate the anomaly score. By training regime-specific expert ensembles, the anomaly structure is not mixed between calm and crisis regimes~\cite{hamilton1989a}.
+This subsection gives a description of the proposed RC-MoE framework. The framework has three modules: (i) a factor decomposition process which decomposes each rolling return window into eight economic factors (trends, momentum, volatility, hidden regime, and tail risks); (ii) a gated model with adaptive voting that fuses outputs of the three independent volatility detectors (rolling quantile, Gaussian HMM, and static quantile) with confidence weighting; and (iii) a regime-dependent meta-model, which assigns the factor vectors to appropriate experts based on the regime condition. In each rolling window, the framework conducts factor analysis, gating, and regime-dependent expert scoring to calculate the anomaly score. By training regime-specific expert ensembles, the anomaly structure is not mixed between calm and crisis regimes~\citep{hamilton1989a}.
 
 The subsections below cover data and evaluation setup, regime definition, factor engineering, and the mixture-of-experts architecture.
 
@@ -352,8 +351,8 @@ The data includes daily open, high, low, close, and volume values from
 2015--2025. This index is selected because of its history going through
 multiple market regimes as well as the presence of regime-defining events
 that include the 2015--2016 oil shock, 2018 volatility shock, 2020 COVID
-crash, and 2022 inflation-induced market drawdown~\cite{cont2001empirical}. The data was split
-into non-overlapping windows of 128 days without shuffling. Since the 128
+crash, and 2022 inflation-induced market drawdown~\citep{cont2001empirical}. The data was split
+into overlapping windows of 128 days (rolling, stride 1) without shuffling. Since the 128
 days window and 252 days rolling quantile-based regimes estimation use the
 first year of data, the period considered for evaluation spans 2016--2025. The
 anomalies were defined based on thresholds calculated from regime-conditional
@@ -384,7 +383,7 @@ based only on backward-looking data; returns are not globally
 normalized, allowing the retention of tail magnitudes necessary for
 crash detection; imbalanced classes are accounted for using cost-sensitive learning, without synthetic sample expansion. Pre-processing
 techniques such as SMOTE and global normalization discard precisely
-the magnitudes necessary for detecting extreme events~\cite{bouchaud2001more}.
+the magnitudes necessary for detecting extreme events~\citep{bouchaud2001more}.
 
 The dataset displays different distribution characteristics at
 different volatility regimes.
@@ -410,12 +409,12 @@ Let $\{P_t\}_{t=1}^{T}$ denote the daily closing prices of a financial asset. Lo
 
 where each sliding window constitutes a local regime in the
 market capturing medium- to long-term behavior characterized by volatility clustering, momentum decay, and tail risk
-accumulation~\cite{bouchaud2001more}. Both the features and labels used for training were computed based on the backward-looking data only,
+accumulation~\citep{bouchaud2001more}. Both the features and labels used for training were computed based on the backward-looking data only,
 thus eliminating any potential for look-ahead bias. Nevertheless, the distributional properties of the sliding windows differ significantly depending on the regime of volatility, thus requiring that the anomaly threshold be regime-dependent.
 
 \subsection{Regime-Conditioned Market States and Anomaly Definition}
 \label{sec:regime_definition}
-However, financial markets exhibit heteroskedasticity and non-stationarity~\cite{bouchaud2001more, hamilton1989a},
+However, financial markets exhibit heteroskedasticity and non-stationarity~\citep{bouchaud2001more, hamilton1989a},
 which suggests that a universal probability distribution for describing the behavior of
 financial markets is not enough for all cases. In our approach, a particular volatility
 regime is associated with each window $W_t$. The key ingredient of the regime detection
@@ -456,7 +455,7 @@ order to reflect the changing nature of financial markets.
 
 Detector 2 (Gaussian HMM): This detector employs a three
 state Gaussian Hidden Markov Model (HMM) to determine
-latent states of volatility according to the Baum--Welch algorithm~\cite{hamilton1989a}. Transition probabilities and a regime persistence
+latent states of volatility according to the Baum--Welch algorithm~\citep{hamilton1989a}. Transition probabilities and a regime persistence
 factor are modeled within the HMM, and state probabilities
 are calculated for each regime $k \in \{0,1,2\}$:
 \begin{equation}
@@ -524,7 +523,7 @@ rationale for using volatility gates on raw returns auto-correlation
 will drop very fast to zero, making returns unpredictable in direction;
 however, the squared return auto-correlation is a long memory
 process, which means there exists clustered volatility, which could
-be investigated using backward looking observation~\cite{cont2001empirical}. Each regime
+be investigated using backward looking observation~\citep{cont2001empirical}. Each regime
 possesses around 33\% of observations, although returns distribution
 differs greatly between regimes.
 
@@ -550,7 +549,7 @@ A_t = \mathbb{I}(|r_t| > \tau_{R_t}).
 This approach takes into account economically relevant distinctions
 between ordinary market fluctuations and truly extreme stress
 events, as is typical for returns that are heavy tailed and volatility
-clustered~\cite{bouchaud2001more}.
+clustered~\citep{bouchaud2001more}.
 
 Regarding the separation objective, the task is clear:
 for any given regime $r$, one needs to determine the function
@@ -561,7 +560,7 @@ As tools for assessing separability, Precision, Recall, and F1-score offer diagn
 
 \subsection{Factor-Based Representation}
 \label{sec:factors}
-Raw return sequences exhibit large dimensionality, strong autocorrelation, and noise dominance, making sequence modeling highly inefficient and potentially biased toward memorization. On the other hand, each window $W_t \in \mathbb{R}^{L \times F}$ (with $L = 128$, and $F$ is the number of raw inputs) is transformed into the low-dimensional and interpretable factor vector $F_t = \phi(W_t) \in \mathbb{R}^d$, where $d \ll L \times F$. Such transformations increase the SNR and preserve the absolute scale of the returns, which is usually downweighted in normalization-based approaches, but plays an important role in detecting extreme financial events~\cite{bouchaud2001more}. Figure~\ref{fig:phase1_pipeline} provides an overview of the entire pipeline of factor generation process.
+Raw return sequences exhibit large dimensionality, strong autocorrelation, and noise dominance, making sequence modeling highly inefficient and potentially biased toward memorization. On the other hand, each window $W_t \in \mathbb{R}^{L \times F}$ (with $L = 128$, and $F$ is the number of raw inputs) is transformed into the low-dimensional and interpretable factor vector $F_t = \phi(W_t) \in \mathbb{R}^d$, where $d \ll L \times F$. Such transformations increase the SNR and preserve the absolute scale of the returns, which is usually downweighted in normalization-based approaches, but plays an important role in detecting extreme financial events~\citep{bouchaud2001more}. Figure~\ref{fig:phase1_pipeline} provides an overview of the entire pipeline of factor generation process.
 
 \begin{figure*}[!t]
 \centering
@@ -580,7 +579,7 @@ This measure is more responsive to consecutive negative returns before crashes. 
 \begin{equation}
     \text{Mom}_t = \frac{\sum_{i=1}^{L} \max(r_{t-i+1}, 0)}{\sum_{i=1}^{L} |r_{t-i+1}|}
 \end{equation}
-which captures exhaustion in panic selloffs~\cite{cont2001empirical}.
+which captures exhaustion in panic selloffs~\citep{cont2001empirical}.
 
 Volatility: Composite Volatility is one of the most important factors that reflects general market volatility through the standard deviation within the window and is used as the regime assignment variable as defined in~\eqref{eq:volatility}. Three additional volatility estimators are added to the library. Garman--Klass volatility estimator makes use of intraday range information:
 \begin{equation}
@@ -590,7 +589,7 @@ Volatility: Composite Volatility is one of the most important factors that refle
 \end{split}
 \label{eq:garman_klass}
 \end{equation}
-where $H_i$, $\mathrm{Lo}_i$, $O_i$, $C_i$ denote the high, low, open, and close within each sub-period. The Parkinson estimator \cite{parkinson1980extreme} provides a range-based alternative:
+where $H_i$, $\mathrm{Lo}_i$, $O_i$, $C_i$ denote the high, low, open, and close within each sub-period. The Parkinson estimator \citep{parkinson1980extreme} provides a range-based alternative:
 \begin{equation}
     \text{Park}_t = \sqrt{ \frac{\sum_{i=1}^{L} \log(H_i/\mathrm{Lo}_i)^2}{4L\ln 2} }
 \end{equation}
@@ -600,7 +599,7 @@ Tail Risk: two core factors capture distributional extremes. Excess kurtosis mea
 \begin{equation}
     \text{Kurt}_t = \frac{\mathbb{E}[(r-\mu)^4]}{\sigma^4} - 3
 \end{equation}
-reflecting the heavy-tailed nature of financial return distributions \cite{bouchaud2001more}, and skewness quantifies return asymmetry, with negative values indicating crash-prone left tails. The extended library adds realized skewness, a within-window complement computed directly from the return series, and maximum drawdown, which captures the worst-case loss within each window:
+reflecting the heavy-tailed nature of financial return distributions \citep{bouchaud2001more}, and skewness quantifies return asymmetry, with negative values indicating crash-prone left tails. The extended library adds realized skewness, a within-window complement computed directly from the return series, and maximum drawdown, which captures the worst-case loss within each window:
 \begin{equation}
     \text{MDD}_t = \max_{s < u \le L} \frac{\sum_{i=1}^{s} r_i - \sum_{i=1}^{u} r_i}{\max_{j \le s} \sum_{i=1}^{j} r_i + \epsilon},
     \label{eq:max_drawdown}
@@ -611,7 +610,7 @@ Liquidity (extended library): volume shock measures abnormal trading volume rela
 \begin{equation}
     \text{VShock}_t = \frac{V_t - \bar{V}_{t-20:t}}{\bar{V}_{t-20:t}}
 \end{equation}
-capturing institutional flow anomalies. The Amihud illiquidity ratio \cite{amihud2002illiquidity} quantifies price impact per unit volume:
+capturing institutional flow anomalies. The Amihud illiquidity ratio \citep{amihud2002illiquidity} quantifies price impact per unit volume:
 \begin{equation}
     \text{ILLIQ}_t = \frac{1}{L} \sum_{i=1}^{L} \frac{|r_i|}{V_i + \epsilon},
     \label{eq:amihud}
@@ -650,7 +649,7 @@ The factor extraction pipeline transforms the raw OHLCV sequences into the 24-di
 
 \subsection{Regime-Conditioned Mixture of Experts}
 \label{sec:moe}
-Financial markets do not have a unique stationary data-generation process \cite{hamilton1989a}. A global classifier, designed to work in all volatility regimes, would need to consider the statistical properties of calm and turbulent markets, which leads to clashing decision boundaries and poor differentiation between normal and abnormal cases. To overcome this problem, we propose a regime-aware Mixture of Experts (MoE), where each expert handles one volatility regime. The conditional return distribution factorizes into~\eqref{eq:mixture}:
+Financial markets do not have a unique stationary data-generation process \citep{hamilton1989a}. A global classifier, designed to work in all volatility regimes, would need to consider the statistical properties of calm and turbulent markets, which leads to clashing decision boundaries and poor differentiation between normal and abnormal cases. To overcome this problem, we propose a regime-aware Mixture of Experts (MoE), where each expert handles one volatility regime. The conditional return distribution factorizes into~\eqref{eq:mixture}:
 \begin{equation}
     P(r \mid F) =
     \sum_{k=1}^{K} P(r \mid F, R = k)\, P(R = k),
@@ -686,7 +685,7 @@ Each regime $k \in \{0, 1, 2\}$ is handled by a pool of $M$ independent experts 
 \end{equation}
 where $m \in \{1, \ldots, M\}$ indexes the expert model family. Six distinct model families are employed per regime, spanning both tabular and sequential inductive biases.
 
-Tree-Based Experts: Three complementary tree ensemble families provide the foundation. Random Forest classifiers with $n_{\text{estimators}} = 200$ and maximum depth of 5 serve as baseline experts, with class-balanced sample weighting to handle the approximately 2\% anomaly prevalence \cite{breiman2001random}. XGBoost experts \cite{chen2016xgboost} employ gradient boosting with $n_{\text{estimators}} = 200$, maximum depth of 5, $L_1$ regularization ($\alpha = 0.1$), $L_2$ regularization ($\lambda = 1.0$), and auto-computed scale\_pos\_weight to address class imbalance. LightGBM experts \cite{ke2017lightgbm} use leaf-wise (best-first) tree growth with $n_{\text{estimators}} = 200$, $\text{num\_leaves} = 31$, and the is\_unbalance flag for automatic class weighting. The gradient boosting architectures provide complementary inductive biases to Random Forest, with built-in regularization preventing overfitting on the small per-regime sample sizes.
+Tree-Based Experts: Three complementary tree ensemble families provide the foundation. Random Forest classifiers with $n_{\text{estimators}} = 200$ and maximum depth of 5 serve as baseline experts, with class-balanced sample weighting to handle the approximately 2\% anomaly prevalence \citep{breiman2001random}. XGBoost experts \citep{chen2016xgboost} employ gradient boosting with $n_{\text{estimators}} = 200$, maximum depth of 5, $L_1$ regularization ($\alpha = 0.1$), $L_2$ regularization ($\lambda = 1.0$), and auto-computed scale\_pos\_weight to address class imbalance. LightGBM experts \citep{ke2017lightgbm} use leaf-wise (best-first) tree growth with $n_{\text{estimators}} = 200$, $\text{num\_leaves} = 31$, and the is\_unbalance flag for automatic class weighting. The gradient boosting architectures provide complementary inductive biases to Random Forest, with built-in regularization preventing overfitting on the small per-regime sample sizes.
 
 \subsubsection{Explored Architectures (Not Evaluated in Reported Results)}
 \label{subsubsec:explored}
@@ -704,7 +703,7 @@ GRU-Attention Expert: A bidirectional Gated Recurrent Unit with multi-head atten
 
 Hybrid Expert: A dual-branch model that fuses the factor vector and the raw sequence through a cross-attention layer, combining the tabular and sequential representations into a single classifier.
 
-All deep learning experts are trained with a focal loss function \cite{lin2017focal} to address the severe class imbalance~\eqref{eq:focal}:
+All deep learning experts are trained with a focal loss function \citep{lin2017focal} to address the severe class imbalance~\eqref{eq:focal}:
 \begin{equation}
     \mathcal{L}_{\text{focal}} = -\alpha_t (1 - p_t)^{\gamma} \log(p_t),
     \label{eq:focal}
@@ -776,7 +775,7 @@ At inference time, a new window $W_t$ is processed through seven sequential step
 \end{algorithmic}
 \end{algorithm}
 
-A global Random Forest baseline trained on the full dataset without regime partitioning is retained as a reference to quantify the benefit of regime conditioning. The tree-based experts maintain interpretability with shallow architectures (depth 5), and all quantitative comparisons, ablations, and the economic backtest reported in this paper are based exclusively on these tree-based experts (RF, XGBoost, and LightGBM). The deep-learning experts described in Section~\ref{subsubsec:explored} (RA-TAN, GRU-Attention, and the Hybrid cross-attention expert) were implemented and trained but, under preliminary per-regime evaluation with only $n\!\approx\!64$--$67$ validation observations per regime, did not exceed the tree-based experts; they are therefore excluded from all reported results and are documented for architectural completeness only. This is consistent with the paper's central thesis, that a structurally well-posed problem formulation, rather than model capacity, drives separability when labeled extreme events are scarce \cite{arrieta2020explainable}. Table~\ref{tab:model_complexity} reports the parameter counts of the evaluated tree experts alongside the explored deep architectures.
+A global Random Forest baseline trained on the full dataset without regime partitioning is retained as a reference to quantify the benefit of regime conditioning. The tree-based experts maintain interpretability with shallow architectures (depth 5), and all quantitative comparisons, ablations, and the economic backtest reported in this paper are based exclusively on these tree-based experts (RF, XGBoost, and LightGBM). The deep-learning experts described in Section~\ref{subsubsec:explored} (RA-TAN, GRU-Attention, and the Hybrid cross-attention expert) were implemented and trained but, under preliminary per-regime evaluation with only $n\!\approx\!64$--$67$ validation observations per regime, did not exceed the tree-based experts; they are therefore excluded from all reported results and are documented for architectural completeness only. This is consistent with the paper's central thesis, that a structurally well-posed problem formulation, rather than model capacity, drives separability when labeled extreme events are scarce \citep{arrieta2020explainable}. Table~\ref{tab:model_complexity} reports the parameter counts of the evaluated tree experts alongside the explored deep architectures.
 
 \begin{table}[t]
 \tbl{Model complexity (evaluated: tree-based; excluded: deep architectures)}
@@ -832,7 +831,7 @@ Bitcoin      & BTC-USD    & Crypto           & 3652 & 3504 & 165 (4.7\%) \\
 \subsection{Evaluation Framework}
 \label{subsec:eval_framework}
 
-Evaluation distinguishes between two modes of assessment with distinct scientific objectives~\cite{liu2024times, chandola2009anomaly}.
+Evaluation distinguishes between two modes of assessment with distinct scientific objectives~\citep{liu2024times, chandola2009anomaly}.
 
 \subsubsection{Structural Separability (In-Sample)}
 \label{subsubsec:in_sample}
@@ -887,7 +886,7 @@ Accuracy is not provided since the task suffers from an extremely skewed class d
           $\mathcal{F}_{1} = {2\,\mathcal{P}\,\mathcal{R}}/{(\mathcal{P}+\mathcal{R})}$.
 
     \item Event-F1 ($\mathcal{F}_{1}^{\mathrm{E}}$): F1 score with tolerance of $\pm3$ trading-days,
-       adhering to the common practice for detection of sparse point events~\cite{liu2024times}.
+       adhering to the common practice for detection of sparse point events~\citep{liu2024times}.
 \end{enumerate}
 
 In regard to risk management, Recall carries more importance: a failure to detect an extreme event is much more damaging than a false alarm.
@@ -910,7 +909,7 @@ In order to gauge the role of each architectural feature in an incremental way, 
 \label{subsec:ablation_design}
 % ----------------------------------------------------------------
 
-Six variations of the models are considered for the entire decade period (2016-2025). The standard deviation rule involves a global threshold-based detector that employs a fixed rolling return volatility criterion. The Z-score model uses a global return distribution for determining thresholds by applying standard Z-scores. ConvVAE involves the training of convolutional variational autoencoder using raw 128-day return windows~\cite{neloy2024a}. Anomaly transformer is one of the latest advancements of deep learning models for detecting anomalies in time series~\cite{song2023anoma}. Global random forest is a Random Forest classifier~\cite{breiman2001random} based on 24 factors that have not been divided into regimes, used as a primary ML baseline model. RC-MoE (Proposed) model is the complete RC-MoE framework.
+Six variations of the models are considered for the entire decade period (2016-2025). The standard deviation rule involves a global threshold-based detector that employs a fixed rolling return volatility criterion. The Z-score model uses a global return distribution for determining thresholds by applying standard Z-scores. ConvVAE involves the training of convolutional variational autoencoder using raw 128-day return windows~\citep{neloy2024a}. Anomaly transformer is one of the latest advancements of deep learning models for detecting anomalies in time series~\citep{song2023anoma}. Global random forest is a Random Forest classifier~\citep{breiman2001random} based on 24 factors that have not been divided into regimes, used as a primary ML baseline model. RC-MoE (Proposed) model is the complete RC-MoE framework.
 % ----------------------------------------------------------------
 \subsection{Results}
 \label{subsec:ablation_results}
@@ -966,7 +965,7 @@ Range    & 67.6--83.3 & 78.6--87.8 & 82.1--95.8 \\
 \label{tab:sensitivity}
 \end{table}
 
-Four trends emerge. To begin with, F1 in-sample is consistently high above the baseline (${\approx}4.7\%$) of random selection for all possible settings (range 67.6\%-95.8\%) and therefore supports the notion that separability under the regimes represents a true structural property of the data. Moreover, $K=4$ is the model configuration that yields the highest in-sample F1 score for $L=128$ (95.8\%) when using RFs only, which is equivalent to the ensemble model with $K=3$ (95.5\%). However, this seeming superiority is an effect of in-sample memorization since there are only approximately 14 anomalies per expert; the RF overfits patterns specific to the regime that generalize poorly; $K=3$ was preferred over $K=4$ because the former fits with the conventional three states of volatility (calm, transition, and crisis) in the financial literature~\cite{hamilton1989a, ang2002regime}. Third, the choice of $L=128$ was made on the basis of interpretability, not simply on maximization of the IS-F1 metric: 128 trading days or roughly 6 calendar months corresponds to one medium-term market cycle, provides sufficient duration to measure stable tail risks, and accords with rolling risk window conventions; shorter rolling windows (with $L\in\{64,96\}$) provide slightly better IS-F1 scores with $K=3$, but only pick up noise patterns. Fourth, out-of-sample evaluation using the reference window size $L = 128$ demonstrates conclusively that only $K = 3$ yields positive out-of-sample F1 (OOS-F1) scores ($3.5\%$, $5$-fold temporal cross-validation with $128$-day purge period): whereas $K=2$ fails to have enough regimes (OOS-F1 score $0.0\%$) to extract anomalies unique to each individual regime, $K=4$ simply memorizes the scarce number of examples from each individual regime (OOS-F1 score $0.0\%$), but does not generalize. This is where OOS validation justifies our three-regime model as the minimum structure resolution for anomaly identification outside of sample.
+Four trends emerge. To begin with, F1 in-sample is consistently high above the baseline (${\approx}4.7\%$) of random selection for all possible settings (range 67.6\%-95.8\%) and therefore supports the notion that separability under the regimes represents a true structural property of the data. Moreover, $K=4$ is the model configuration that yields the highest in-sample F1 score for $L=128$ (95.8\%) when using RFs only, which is equivalent to the ensemble model with $K=3$ (95.5\%). However, this seeming superiority is an effect of in-sample memorization since there are only approximately 14 anomalies per expert; the RF overfits patterns specific to the regime that generalize poorly; $K=3$ was preferred over $K=4$ because the former fits with the conventional three states of volatility (calm, transition, and crisis) in the financial literature~\citep{hamilton1989a, ang2002regime}. Third, the choice of $L=128$ was made on the basis of interpretability, not simply on maximization of the IS-F1 metric: 128 trading days or roughly 6 calendar months corresponds to one medium-term market cycle, provides sufficient duration to measure stable tail risks, and accords with rolling risk window conventions; shorter rolling windows (with $L\in\{64,96\}$) provide slightly better IS-F1 scores with $K=3$, but only pick up noise patterns. Fourth, out-of-sample evaluation using the reference window size $L = 128$ demonstrates conclusively that only $K = 3$ yields positive out-of-sample F1 (OOS-F1) scores ($3.5\%$, $5$-fold temporal cross-validation with $128$-day purge period): whereas $K=2$ fails to have enough regimes (OOS-F1 score $0.0\%$) to extract anomalies unique to each individual regime, $K=4$ simply memorizes the scarce number of examples from each individual regime (OOS-F1 score $0.0\%$), but does not generalize. This is where OOS validation justifies our three-regime model as the minimum structure resolution for anomaly identification outside of sample.
 
 % ================================================================
 % SECTION VII - MULTI-MODEL COMPARISON AND ECONOMIC EVALUATION
@@ -1097,7 +1096,7 @@ LightGBM RC-MoE reaches significantly higher precision compared to GARCH in the 
 \subsection{Economic Backtest}
 \label{subsec:backtest}
 % ----------------------------------------------------------------
-The valuation of economic value added from the models through hedge via the anomalies is provided in Table~\ref{tab:backtest} in terms of: On detection of the anomaly on day $d$, conversion of equity portfolio into a riskless cash position with interest of 4\% for the next 5 days. Performance of the portfolios is measured in terms of annualized return, Sharpe ratio~\cite{sharpe1966mutual}, maximum drawdown (Max DD), and Sortino ratio. Evaluation metrics have been calculated across one fixed period only. The transaction costs are not included in the headline results, which will be followed by a sensitivity analysis. Using an estimated conservative execution cost of 5 basis points (as per the cost associated with S\&P~500 ETF/index futures), the number of hedged days (of 5-day holding period) for LightGBM RC-MoE is 152, incurring a cumulative drag of ${\approx}30$~bp (${\approx}3$~bp per annum), reducing annualized return from $15.27\%$ to ${\approx}15.24\%$; the performance ranking is unchanged. By contrast, GARCH at 19.6\% hedged days shows approximately 96 activations (${\approx}10$~bp per annum drag), making it comparatively more sensitive to transaction-cost assumptions and further increasing the hedging-efficiency advantage of the RC-MoE.
+The valuation of economic value added from the models through hedge via the anomalies is provided in Table~\ref{tab:backtest} in terms of: On detection of the anomaly on day $d$, conversion of equity portfolio into a riskless cash position with interest of 4\% for the next 5 days. Performance of the portfolios is measured in terms of annualized return, Sharpe ratio~\citep{sharpe1966mutual}, maximum drawdown (Max DD), and Sortino ratio. Evaluation metrics have been calculated across one fixed period only. The transaction costs are not included in the headline results, which will be followed by a sensitivity analysis. Using an estimated conservative execution cost of 5 basis points (as per the cost associated with S\&P~500 ETF/index futures), the number of hedged days (of 5-day holding period) for LightGBM RC-MoE is 152, incurring a cumulative drag of ${\approx}30$~bp (${\approx}3$~bp per annum), reducing annualized return from $15.27\%$ to ${\approx}15.24\%$; the performance ranking is unchanged. By contrast, GARCH at 19.6\% hedged days shows approximately 96 activations (${\approx}10$~bp per annum drag), making it comparatively more sensitive to transaction-cost assumptions and further increasing the hedging-efficiency advantage of the RC-MoE.
 
 Two features of Table~\ref{tab:backtest} merit emphasis before the detailed discussion. First, the ranking is governed by \emph{risk-adjusted} rather than raw return. Although the XGBoost MoE posts a marginally higher annualized return ($14.57\%$) than the LightGBM Global baseline ($14.07\%$), regime specialization lifts the LightGBM variant to the top of both the return ($15.27\%$) and the Sortino ($0.964$) columns simultaneously. The Sortino dominance is the more informative of the two, since it penalizes only downside deviation and therefore rewards a detector that suppresses left-tail episodes without over-trading in benign conditions. Second, the hedged-day column quantifies operational burden in a way the return statistics cannot: RC-MoE attains its result while sitting in cash on only $6.2\%$ of trading days, against $9.2\%$ for the global model and $19.6\%$ for the most active GARCH configuration. A lower intervention count translates directly into reduced turnover, smaller cumulative slippage, and greater strategy capacity, and it is precisely this efficiency that the basis-point cost figures above render explicit.
 
@@ -1128,7 +1127,7 @@ Warning concerning period dependency. The years between 2016 and 2025 represent 
 
 The RC-MoE model is comparable to the perfect-label hedge model, which hedges against each anomalous occurrence, irrespective of the circumstances in the market (Sharpe ratio: 0.772 compared with 0.767; returns: 15.27\% compared with 14.54\%). The reason why the performance is comparable to the perfect-label model is that the latter hedges against all types of anomalies, even the non-harmful ones.
 
-Figure~\ref{fig:cumret} shows the path taken by the cumulative returns over the 2022--2025 hedge period. The regime-aware RC-MoE strategy overlay (blue solid line) mimics the buy-and-hold in periods of up-trends but deviates from it defensively in times of drawdowns, and, as can be seen from the lower graph, which is cumulative returns relative to buy-and-hold, this results in risk reduction, as shown in the Fama-French analysis ($\beta=1$, $\alpha=0$) (Section~\ref{subsec:factor_exposure}).
+Figure~\ref{fig:cumret} shows the path taken by the cumulative returns over the 2022--2025 hedge period. The regime-aware RC-MoE strategy overlay (blue solid line) mimics the buy-and-hold in periods of up-trends but deviates from it defensively in times of drawdowns, and, as can be seen from the lower graph, which is cumulative returns relative to buy-and-hold, this results in risk reduction, as shown in the Fama-French analysis ($\hat{\beta}_{\text{Mkt}}=0.63$, $\alpha$ statistically indistinguishable from zero) (Section~\ref{subsec:factor_exposure}).
 
 \begin{figure*}[!t]
   \centering
@@ -1165,7 +1164,7 @@ As shown in Figure~\ref{fig:hedging_efficiency}, the LightGBM RC-MoE model attai
 \label{subsec:factor_exposure}
 % ----------------------------------------------------------------
 
-In order to formally assess whether the regime-aware hedge overlay creates value in addition to passively being exposed to the known risk factors, we regress its daily abnormal return ($R_{\text{hedge},t} - R_{f,t}$) on the Fama-French six-factor model (including Momentum), formulated in~\eqref{eq:ff6}:
+In order to formally assess whether the regime-aware hedge overlay creates value in addition to passively being exposed to the known risk factors, we regress its daily abnormal return ($R_{\text{hedge},t} - R_{f,t}$) on the Fama-French five-factor model~\citep{fama2015five} plus Momentum (the "six-factor" model), formulated in~\eqref{eq:ff6}:
 \begin{equation}
 \begin{split}
   R_{\text{hedge}} - R_f &= \alpha + \beta_{\text{Mkt}}\,\mathrm{MktRF} + \beta_{\text{SMB}}\,\mathrm{SMB} + \beta_{\text{HML}}\,\mathrm{HML} \\
@@ -1235,7 +1234,7 @@ Table~\ref{tab:period_comparison} reports backtest performance across two evalua
 \label{subsec:var}
 % ----------------------------------------------------------------
 
-Table~\ref{tab:var} demonstrates that unconditional tail-risk estimates systematically misrepresent capital requirements. All VaR and CVaR figures are computed directly from actual daily S\&P 500 returns partitioned by rolling 60-day realised volatility regimes~\cite{jorion2007value}; all values represent 1-day losses and are reported as negative numbers (e.g., $-1.67\%$ denotes a 1.67\% loss). CVaR (Expected Shortfall) is employed as a coherent risk measure~\cite{artzner1999coherent, rockafellar2000cvar} satisfying the properties of monotonicity, sub-additivity, homogeneity, and translational invariance.
+Table~\ref{tab:var} demonstrates that unconditional tail-risk estimates systematically misrepresent capital requirements. All VaR and CVaR figures are computed directly from actual daily S\&P 500 returns partitioned by rolling 60-day realised volatility regimes~\citep{jorion2007value}; all values represent 1-day losses and are reported as negative numbers (e.g., $-1.67\%$ denotes a 1.67\% loss). CVaR (Expected Shortfall) is employed as a coherent risk measure~\citep{artzner1999coherent, rockafellar2000cvar} satisfying the properties of monotonicity, sub-additivity, homogeneity, and translational invariance.
 
 \begin{table}[H]
 \tbl{Regime-conditional VaR and CVaR (S\&P 500, 2016--2025)}
@@ -1270,9 +1269,9 @@ but provide no model of its \emph{shape}, and, critically, no test of
 whether an unconditional risk model is correctly calibrated within each
 regime. To address both, we fit a Generalized Pareto Distribution (GPD) to
 the peaks-over-threshold (POT) of the loss series ($-r_t$) within each
-regime~\cite{mcneil2000estimation}, using the $90$th loss percentile as the threshold $u$, and then backtest the resulting Value-at-Risk with the Kupiec proportion-of-failures
-(POF) test~\cite{kupiec1995techniques} and the Christoffersen conditional-coverage
-test~\cite{mcneil2015quantitative}.
+regime~\citep{mcneil2000estimation}, using the $90$th loss percentile as the threshold $u$, and then backtest the resulting Value-at-Risk with the Kupiec proportion-of-failures
+(POF) test~\citep{kupiec1995techniques} and the Christoffersen conditional-coverage
+test~\citep{mcneil2015quantitative}.
 
 \begin{table}[H]
 \tbl{EVT tail fit by regime (GPD peaks-over-threshold, S\&P 500, 2016--2025)}
@@ -1340,7 +1339,7 @@ High Vol & $0.419$ & $-24.3\%$ & Under-reserved \\
 A bank holding capital against the unconditional VaR over-reserves by
 $91.1\%$ in calm markets and \emph{under}-reserves by $24.3\%$ during
 volatility shocks, as shown in Fig.~\ref{fig:basel_capital}. The over-reservation figure independently corroborates
-the $\approx\!92\%$ estimate stated earlier, now grounded in a formal
+the $\approx\!91\%$ estimate stated earlier, now grounded in a formal
 Basel III capital calculation rather than a quantile ratio. The
 under-reservation in the high-volatility regime is the more consequential
 finding: unconditional models leave institutions thinnest on capital
@@ -1436,7 +1435,7 @@ across equities and Bitcoin alike.
     \label{fig:var_regime}
 \end{figure*}
 
-Figure~\ref{fig:var_regime} visualizes the time-varying VaR boundaries across the full sample. The unconditional $\text{VaR}_{95}$ of $-1.67\%$ conceals a $2.9\times$ differential across regimes: Low-Vol $\text{VaR}_{95} = -0.87\%$ versus High-Vol $\text{VaR}_{95} = -2.51\%$. The disparity widens at higher confidence levels: Low-Vol $\text{CVaR}_{99} = -1.88\%$ versus High-Vol $\text{CVaR}_{99} = -6.47\%$, a $3.4\times$ ratio. The financial institution which holds capital on the basis of the unconditional VaR would be over-reserved by about 92 \% when the market is calm and under-reserved by about 24 \% during periods of market volatility, with direct implications for regulatory capital allocation under Basel III/IV.
+Figure~\ref{fig:var_regime} visualizes the time-varying VaR boundaries across the full sample. The unconditional $\text{VaR}_{95}$ of $-1.67\%$ conceals a $2.9\times$ differential across regimes: Low-Vol $\text{VaR}_{95} = -0.87\%$ versus High-Vol $\text{VaR}_{95} = -2.51\%$. The disparity widens at higher confidence levels: Low-Vol $\text{CVaR}_{99} = -1.88\%$ versus High-Vol $\text{CVaR}_{99} = -6.47\%$, a $3.4\times$ ratio. The financial institution which holds capital on the basis of the unconditional VaR would be over-reserved by about 91 \% when the market is calm and under-reserved by about 24 \% during periods of market volatility, with direct implications for regulatory capital allocation under Basel III/IV.
 
 % ----------------------------------------------------------------
 \subsection{Explainability Consistency Index}
@@ -1451,7 +1450,7 @@ The Explainability Consistency Index (ECI) quantifies \emph{cross-model} agreeme
   \label{eq:eci}
 \end{equation}
 
-\noindent where $d_{\tau}$ is the normalised Kendall tau distance~\cite{kendall1938measure} between feature-importance ranking vectors $\pi_i$ and $\pi_j$ from models $i$ and $j$, and $K = 3$. An ECI of 1 denotes perfect agreement; 0 denotes maximum disagreement.
+\noindent where $d_{\tau}$ is the normalised Kendall tau distance~\citep{kendall1938measure} between feature-importance ranking vectors $\pi_i$ and $\pi_j$ from models $i$ and $j$, and $K = 3$. An ECI of 1 denotes perfect agreement; 0 denotes maximum disagreement.
 
 The ECI is distinct from existing explanation stability measures in two ways. First, it operates \emph{across independently trained model families} (RF, XGBoost, LightGBM) rather than across repeated runs of the same model or across explanation methods for a single model; cross-model agreement is a structurally stronger claim because model-family diversity is much higher than seed or method diversity. Second, it is evaluated \emph{per volatility regime}, enabling a formal test of whether anomaly drivers vary structurally across market states, a question that global consistency measures cannot address because they aggregate across regimes. For reference, cross-method ECI (comparing SHAP versus tree importances within a single model) yields ECI $\approx 0.85$--$0.88$ across all regimes, confirming that the lower cross-model values (0.646--0.789) reflect genuine disagreement between expert families rather than explanation method noise.
 
@@ -1475,7 +1474,7 @@ High Volatility      & 0.789 & [0.702,\ 0.863] & 7.13 \\
 \label{tab:eci_regimes}
 \end{table}
 
-The global ECI of 0.768 [0.685, 0.841], as shown in Fig.~\ref{fig:eci_regimes}, indicates strong cross-model agreement on anomaly drivers, substantially above the null baseline of 0.500 ($z=6.71$). All three model families independently identify composite volatility and GARCH-based features as top-2 drivers, consistent with the ARCH literature~\cite{bollerslev1986a} and the established role of volatility-of-volatility in tail risk~\cite{bouchaud2001more}.
+The global ECI of 0.768 [0.685, 0.841], as shown in Fig.~\ref{fig:eci_regimes}, indicates strong cross-model agreement on anomaly drivers, substantially above the null baseline of 0.500 ($z=6.71$). All three model families independently identify composite volatility and GARCH-based features as top-2 drivers, consistent with the ARCH literature~\citep{bollerslev1986a} and the established role of volatility-of-volatility in tail risk~\citep{bouchaud2001more}.
 
 Per-regime ECI follows a clear pattern (Table~\ref{tab:eci_regimes}). The Low-Vol regime shows the lowest agreement (ECI $= 0.646$ [0.536, 0.755]), reflecting the sparse and heterogeneous character of anomalies in calm markets ($n = 10$ anomalies, $z = 3.49$ above null). The Med-Vol regime reaches ECI $= 0.763$ [0.694, 0.826] ($z = 6.29$) and the High-Vol regime reaches the highest agreement at ECI $= 0.789$ [0.702, 0.863] ($z = 7.13$), consistent with the more canonical tail-event signatures in volatile markets. Pairwise Wilcoxon tests confirm the regimes are statistically distinguishable in their explanatory consensus (all $p < 0.001$). The monotonically increasing ECI from Low- to High-Vol ($0.646 \rightarrow 0.763 \rightarrow 0.789$) mirrors the Basel III capital finding: regime structure becomes more coherent and economically interpretable precisely at the elevated-volatility states where regulatory risk is greatest. This regime-dependent nature of explanatory consensus is inaccessible to global models and represents a structural empirical finding of this study.
 
@@ -1519,7 +1518,7 @@ High Volatility & Momentum Factor & Panic-driven momentum collapse defines extre
 \end{table}
 
 \subsection{Economic Interpretation}
-The dominant factors for each regime are consistent with established financial theory. For the low-volatility regimes, excess market liquidity implies that flash crashes occur due to imbalances in the order book rather than market trends, which results in Latent State~C dominating. The same can be observed within the body of research surrounding microstructure-induced flash crashes. For the medium-volatility regimes, the existence of a negative return trend is indicative of increasingly poor market conditions and is thus the dominant factor, consistent with research into momentum crashes~\cite{fama2015five}. For the high-volatility regimes, the momentum collapse is a sign of panic selling and forced deleveraging via margin calls.
+The dominant factors for each regime are consistent with established financial theory. For the low-volatility regimes, excess market liquidity implies that flash crashes occur due to imbalances in the order book rather than market trends, which results in Latent State~C dominating. The same can be observed within the body of research surrounding microstructure-induced flash crashes. For the medium-volatility regimes, the existence of a negative return trend is indicative of increasingly poor market conditions and is thus the dominant factor, consistent with research into momentum crashes~\citep{daniel2016momentum}. For the high-volatility regimes, the momentum collapse is a sign of panic selling and forced deleveraging via margin calls.
 
 No single global factor consistently explains financial anomalies across all market states: the anomaly driver itself is regime-dependent. This result directly motivates the RC-MoE architecture and is quantitatively supported by the ECI analysis in Section~\ref{subsec:eci}.
 
@@ -1538,7 +1537,7 @@ The SHAP values above capture structural separation on in-sample data; they are 
 \subsection{Structural Separability vs.\ Predictive Accuracy}
 \label{subsec:disc_separability}
 % ----------------------------------------------------------------
-The gap between in-sample structural separability and out-of-sample generalisation is theoretically expected rather than a modelling deficiency. Volatility-regime boundaries shift across structural breaks, and the factor co-movements driving one crisis episode differ from those of the next, preventing generalisation without re-calibration. Consistent with the non-stationarity literature~\cite{cont2001empirical}, the in-sample F1 is best interpreted as an upper bound on structural discriminability under fixed regime definitions. The economically relevant contribution is the precision-selective detection profile and the regulatory EVT finding, both evaluated under strict temporal protocols.
+The gap between in-sample structural separability and out-of-sample generalisation is theoretically expected rather than a modelling deficiency. Volatility-regime boundaries shift across structural breaks, and the factor co-movements driving one crisis episode differ from those of the next, preventing generalisation without re-calibration. Consistent with the non-stationarity literature~\citep{cont2001empirical}, the in-sample F1 is best interpreted as an upper bound on structural discriminability under fixed regime definitions. The economically relevant contribution is the precision-selective detection profile and the regulatory EVT finding, both evaluated under strict temporal protocols.
 
 % ----------------------------------------------------------------
 \subsection{Role of Regime Conditioning}
@@ -1550,7 +1549,7 @@ Global detectors assume a static relationship between return magnitude and anoma
 \subsection{Implications for Deep Learning in Finance}
 \label{subsec:disc_deeplearning}
 % ----------------------------------------------------------------
-The superior structural separability of a shallow RC-MoE over high-capacity deep architectures (ConvVAE, Anomaly Transformer) highlights three structural properties that disadvantage deep learning for equity tail events: extreme class imbalance at the ${\approx}2.1\%$ anomaly rate, loss of absolute return magnitude through standard normalisation, and a signal-to-noise ratio that promotes memorisation over generalisation. Theory-grounded factor engineering provides more robust representations than end-to-end learning in this setting.
+The superior structural separability of a shallow RC-MoE over high-capacity deep architectures (ConvVAE, Anomaly Transformer) highlights three structural properties that disadvantage deep learning for equity tail events: extreme class imbalance at the ${\approx}2.0\%$ anomaly rate, loss of absolute return magnitude through standard normalisation, and a signal-to-noise ratio that promotes memorisation over generalisation. Theory-grounded factor engineering provides more robust representations than end-to-end learning in this setting.
 
 % ----------------------------------------------------------------
 \subsection{Risk Management Applications}
@@ -1590,174 +1589,166 @@ This work was supported by Manipal University Jaipur, Jaipur, Rajasthan, India.
 
 
 \section*{Data availability}
-The raw daily market series underlying this study (S\&P 500, NASDAQ, Russell 2000, and Bitcoin) are openly available via the open-source \texttt{yfinance} Python library \cite{yfinance} (\url{https://pypi.org/project/yfinance/}), and the complementary risk factor structures used for the Fama-French exposure and alpha verification models are openly available from the Kenneth R. French Data Library \cite{french_data} (\url{https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html}). The derived, localized rolling windows, engineered factor channels, and the precise values used to compute all reported means, standard deviations, tables, and figures that support the findings of this study are openly available in Zenodo at \url{https://doi.org/10.5281/zenodo.21257024} \cite{hemrajani2026data}, reference number zenodo.21257024, under a CC-BY 4.0 license. There are no datasets in this study that are restricted from sharing.
+The data that support the findings of this study are openly available in zenodo in \url{https://doi.org/10.5281/zenodo.21257024}. reference number (Hemrajani et al. 2026). The complementary risk factor structures used for the Fama-French exposure and alpha verification models are openly available from the Kenneth R. French Data Library (\url{https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html}).
 
 \section*{Code availability}
-The code used for factor extraction, regime conditioning, model training, and evaluation is openly available in Zenodo at \url{https://doi.org/10.5281/zenodo.XXXXXXX} \cite{hemrajani2026code}, reference number zenodo.XXXXXXX, under a CC-BY 4.0 license. This archive is a permanent snapshot of the corresponding GitHub repository, \url{https://github.com/HarshitK2814/Financial-Anomaly-Detection-S-P500-Ensmeble_Model}.
+The code that supports the findings of this study is openly available in zenodo in \url{https://doi.org/10.5281/zenodo.21257660}. reference number (Hemrajani et al. 2026).
 
 \begin{thebibliography}{99}
 
-\bibitem{alkilane2024mixma}
-K.~Alkilane, Y.~He, and D.-H.~Lee, \emph{MixMamba: Time series modeling with adaptive expertise}, Information Fusion 112 (2024), p. 102589.
+\bibitem[Alkilane et al.(2024)]{alkilane2024mixma}
+Alkilane, K., Y.~He, and D.-H.~Lee. 2024. \emph{MixMamba: Time series modeling with adaptive expertise}. Information Fusion 112: 102589.
 
-\bibitem{amihud2002illiquidity}
-Y.~Amihud, \emph{Illiquidity and stock returns}, Journal of Financial Markets 5 (2002), pp. 31--56.
+\bibitem[Amihud(2002)]{amihud2002illiquidity}
+Amihud, Y. 2002. \emph{Illiquidity and stock returns}. Journal of Financial Markets 5: 31--56.
 
-\bibitem{ang2002regime}
-A.~Ang and G.~Bekaert, \emph{Regime switches in interest rates}, Journal of Business and Economic Statistics 20 (2002), pp. 163--182.
+\bibitem[Ang and Bekaert(2002)]{ang2002regime}
+Ang, A., and G.~Bekaert. 2002. \emph{Regime switches in interest rates}. Journal of Business and Economic Statistics 20: 163--182.
 
-\bibitem{yfinance}
-R.~Aroussi, \emph{yfinance: An open-source financial data downloader}, Python Package Index (2025), \url{https://pypi.org/project/yfinance/}.
+\bibitem[Artzner et al.(1999)]{artzner1999coherent}
+Artzner, P., F.~Delbaen, J.-M.~Eber, and D.~Heath. 1999. \emph{Coherent measures of risk}. Mathematical Finance 9: 203--228.
 
-\bibitem{artzner1999coherent}
-P.~Artzner, F.~Delbaen, J.-M.~Eber, and D.~Heath, \emph{Coherent measures of risk}, Mathematical Finance 9 (1999), pp. 203--228.
+\bibitem[Bakumenko(2025)]{bakumenko2025advan}
+Bakumenko, A. 2025. \emph{Advancing anomaly detection: Non-semantic financial data encoding with large language models}. IEEE Access 13.
 
-\bibitem{bakumenko2025advan}
-A.~Bakumenko, \emph{Advancing anomaly detection: Non-semantic financial data encoding with large language models}, IEEE Access 13 (2025).
+\bibitem[Barredo Arrieta et al.(2020)]{arrieta2020explainable}
+Barredo Arrieta, A., N.~Díaz-Rodríguez, J.~Del Ser, A.~Bennetot, S.~Tabik, A.~Barbado, S.~García, S.~Gil-López, D.~Molina, R.~Benjamins, R.~Chatila, and F.~Herrera. 2020. \emph{Explainable artificial intelligence (XAI): Concepts, taxonomies, opportunities and challenges toward responsible AI}. Information Fusion 58: 82--115.
 
-\bibitem{arrieta2020explainable}
-A.~Barredo Arrieta, N.~Díaz-Rodríguez, J.~Del Ser, A.~Bennetot, S.~Tabik, A.~Barbado, S.~García, S.~Gil-López, D.~Molina, R.~Benjamins, R.~Chatila, and F.~Herrera, \emph{Explainable artificial intelligence (XAI): Concepts, taxonomies, opportunities and challenges toward responsible AI}, Information Fusion 58 (2020), pp. 82--115.
+\bibitem[Bollerslev(1986)]{bollerslev1986a}
+Bollerslev, T. 1986. \emph{Generalized autoregressive conditional heteroskedasticity}. Journal of Econometrics 31: 307--327.
 
-\bibitem{bollerslev1986a}
-T.~Bollerslev, \emph{Generalized autoregressive conditional heteroskedasticity}, Journal of Econometrics 31 (1986), pp. 307--327.
+\bibitem[Bouchaud and Potters(2001)]{bouchaud2001more}
+Bouchaud, J.-P., and M.~Potters. 2001. \emph{More stylized facts of financial markets: Leverage effect and downside correlations}. Physica A: Statistical Mechanics and its Applications 299: 60--70.
 
-\bibitem{bouchaud2001more}
-J.-P.~Bouchaud and M.~Potters, \emph{More stylized facts of financial markets: Leverage effect and downside correlations}, Physica A: Statistical Mechanics and its Applications 299 (2001), pp. 60--70.
+\bibitem[Breiman(2001)]{breiman2001random}
+Breiman, L. 2001. \emph{Random forests}. Machine Learning 45: 5--32.
 
-\bibitem{breiman2001random}
-L.~Breiman, \emph{Random forests}, Machine Learning 45 (2001), pp. 5--32.
+\bibitem[Cao and Guo(2024)]{cao2024autom}
+Cao, F., and X.~Guo. 2024. \emph{Automated financial time series anomaly detection via curiosity-guided exploration and self-imitation learning}. Engineering Applications of Artificial Intelligence 133: 108663.
 
-\bibitem{cao2024autom}
-F.~Cao and X.~Guo, \emph{Automated financial time series anomaly detection via curiosity-guided exploration and self-imitation learning}, Engineering Applications of Artificial Intelligence 133 (2024), p. 108663.
+\bibitem[Chandola et al.(2009)]{chandola2009anomaly}
+Chandola, V., A.~Banerjee, and V.~Kumar. 2009. \emph{Anomaly detection: A survey}. ACM Computing Surveys 41: 1--58.
 
-\bibitem{chandola2009anomaly}
-V.~Chandola, A.~Banerjee, and V.~Kumar, \emph{Anomaly detection: A survey}, ACM Computing Surveys 41 (2009), pp. 1--58.
+\bibitem[Chen and Guestrin(2016)]{chen2016xgboost}
+Chen, T., and C.~Guestrin. 2016. \emph{XGBoost: A scalable tree boosting system}. In \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 785--794.
 
-\bibitem{chen2016xgboost}
-T.~Chen and C.~Guestrin, \emph{XGBoost: A scalable tree boosting system}, in \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 2016, pp. 785--794.
+\bibitem[Cont(2001)]{cont2001empirical}
+Cont, R. 2001. \emph{Empirical properties of asset returns: Stylized facts and statistical issues}. Quantitative Finance 1: 223--236.
 
-\bibitem{cont2001empirical}
-R.~Cont, \emph{Empirical properties of asset returns: Stylized facts and statistical issues}, Quantitative Finance 1 (2001), pp. 223--236.
+\bibitem[Cr\'{e}pey et al.(2022)]{crepey2022anoma}
+Cr\'{e}pey, S., N.~Lehdili, N.~Madhar, and M.~Thomas. 2022. \emph{Anomaly detection on financial time series by principal component analysis and neural networks}. Algorithms 15: 385.
 
-\bibitem{crepey2022anoma}
-S.~Cr\'{e}pey, N.~Lehdili, N.~Madhar, and M.~Thomas, \emph{Anomaly detection on financial time series by principal component analysis and neural networks}, Algorithms 15 (2022), p. 385.
+\bibitem[Daniel and Moskowitz(2016)]{daniel2016momentum}
+Daniel, K., and T.J.~Moskowitz. 2016. \emph{Momentum crashes}. Journal of Financial Economics 122: 221--247.
 
-\bibitem{darban2023deep}
-Z.Z.~Darban, G.I.~Webb, S.~Pan, C.C.~Aggarwal, and M.~Salehi, \emph{Deep learning for time series anomaly detection: A survey}, ACM Computing Surveys 57 (2024), pp. 1--42.
+\bibitem[Darban et al.(2024)]{darban2023deep}
+Darban, Z.Z., G.I.~Webb, S.~Pan, C.C.~Aggarwal, and M.~Salehi. 2024. \emph{Deep learning for time series anomaly detection: A survey}. ACM Computing Surveys 57: 1--42.
 
-\bibitem{engle1982arch}
-R.F.~Engle, \emph{Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation}, Econometrica 50 (1982), pp. 987--1007.
+\bibitem[Engle(1982)]{engle1982arch}
+Engle, R.F. 1982. \emph{Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation}. Econometrica 50: 987--1007.
 
-\bibitem{engle2004caviar}
-R.F.~Engle and S.~Manganelli, \emph{CAViaR: Conditional autoregressive value at risk by regression quantiles}, Journal of Business and Economic Statistics 22 (2004), pp. 367--381.
+\bibitem[Engle and Manganelli(2004)]{engle2004caviar}
+Engle, R.F., and S.~Manganelli. 2004. \emph{CAViaR: Conditional autoregressive value at risk by regression quantiles}. Journal of Business and Economic Statistics 22: 367--381.
 
-\bibitem{fama1970efficient}
-E.F.~Fama, \emph{Efficient capital markets: A review of theory and empirical work}, The Journal of Finance 25 (1970), pp. 383--417.
+\bibitem[Fama(1970)]{fama1970efficient}
+Fama, E.F. 1970. \emph{Efficient capital markets: A review of theory and empirical work}. The Journal of Finance 25: 383--417.
 
-\bibitem{fama2015five}
-E.F.~Fama and K.R.~French, \emph{A five-factor asset pricing model}, Journal of Financial Economics 116 (2015), pp. 1--22.
+\bibitem[Fama and French(2015)]{fama2015five}
+Fama, E.F., and K.R.~French. 2015. \emph{A five-factor asset pricing model}. Journal of Financial Economics 116: 1--22.
 
-\bibitem{french_data}
-K.R.~French, \emph{Kenneth R. French - Data Library}, (2025), \url{https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html}.
+\bibitem[Friedman(2001)]{friedman2001greedy}
+Friedman, J.H. 2001. \emph{Greedy function approximation: A gradient boosting machine}. Annals of Statistics 29: 1189--1232.
 
-\bibitem{friedman2001greedy}
-J.H.~Friedman, \emph{Greedy function approximation: A gradient boosting machine}, Annals of Statistics 29 (2001), pp. 1189--1232.
+\bibitem[Guidolin(2011)]{guidolin2011markov}
+Guidolin, M. 2011. \emph{Markov switching models in empirical finance}. Advances in Econometrics 27: 1--86.
 
-\bibitem{guidolin2011markov}
-M.~Guidolin, \emph{Markov switching models in empirical finance}, Advances in Econometrics 27 (2011), pp. 1--86.
+\bibitem[Hamilton(1989)]{hamilton1989a}
+Hamilton, J.D. 1989. \emph{A new approach to the economic analysis of nonstationary time series and the business cycle}. Econometrica 57: 357--384.
 
-\bibitem{hamilton1989a}
-J.D.~Hamilton, \emph{A new approach to the economic analysis of nonstationary time series and the business cycle}, Econometrica 57 (1989), pp. 357--384.
+\bibitem[Hansen(1994)]{hansen1994autoregressive}
+Hansen, B.E. 1994. \emph{Autoregressive conditional density estimation}. International Economic Review 35: 705--730.
 
-\bibitem{hansen1994autoregressive}
-B.E.~Hansen, \emph{Autoregressive conditional density estimation}, International Economic Review 35 (1994), pp. 705--730.
+\bibitem[Jacobs et al.(1991)]{jacobs1991moe}
+Jacobs, R.A., M.I.~Jordan, S.J.~Nowlan, and G.E.~Hinton. 1991. \emph{Adaptive mixtures of local experts}. Neural Computation 3: 79--87.
 
-\bibitem{hemrajani2026code}
-P.~Hemrajani, H.~Kumar, S.~Kumar, S.~Shekhar, V.~Himthani, S.~Mahalik, and M.K.~Bohra, \emph{Explainable Regime Conditioned Mixture of Experts for Financial Anomaly Detection: Source Code} (2026), Zenodo. \url{https://doi.org/10.5281/zenodo.XXXXXXX}.
+\bibitem[Jorion(2007)]{jorion2007value}
+Jorion, P. 2007. \emph{Value at risk: The new benchmark for managing financial risk}. McGraw-Hill.
 
-\bibitem{hemrajani2026data}
-P.~Hemrajani, H.~Kumar, S.~Kumar, S.~Shekhar, V.~Himthani, S.~Mahalik, and M.K.~Bohra, \emph{Explainable Regime Conditioned Mixture of Experts for Financial Anomaly Detection: Replication Dataset} (2026), Zenodo. \url{https://doi.org/10.5281/zenodo.21257024}.
+\bibitem[Ke et al.(2017)]{ke2017lightgbm}
+Ke, G., Q.~Meng, T.~Finley, T.~Wang, W.~Chen, W.~Ma, Q.~Ye, and T.-Y.~Liu. 2017. \emph{LightGBM: A highly efficient gradient boosting decision tree}. In \emph{Advances in Neural Information Processing Systems} 30.
 
-\bibitem{jacobs1991moe}
-R.A.~Jacobs, M.I.~Jordan, S.J.~Nowlan, and G.E.~Hinton, \emph{Adaptive mixtures of local experts}, Neural Computation 3 (1991), pp. 79--87.
+\bibitem[Kendall(1938)]{kendall1938measure}
+Kendall, M.G. 1938. \emph{A new measure of rank correlation}. Biometrika 30: 81--93.
 
-\bibitem{jorion2007value}
-P.~Jorion, \emph{Value at risk: The new benchmark for managing financial risk}, McGraw-Hill, 2007.
+\bibitem[Kupiec(1995)]{kupiec1995techniques}
+Kupiec, P.H. 1995. \emph{Techniques for verifying the accuracy of risk measurement models}. The Journal of Derivatives 3: 73--84.
 
-\bibitem{ke2017lightgbm}
-G.~Ke, Q.~Meng, T.~Finley, T.~Wang, W.~Chen, W.~Ma, Q.~Ye, and T.-Y.~Liu, \emph{LightGBM: A highly efficient gradient boosting decision tree}, in \emph{Advances in Neural Information Processing Systems} 30, 2017.
+\bibitem[Li and Fan(2025)]{fan2025expla}
+Li, Z., and R.~Fan. 2025. \emph{Explainable heterogeneous anomaly detection in financial networks via adaptive expert routing}. IEEE Access.
 
-\bibitem{kendall1938measure}
-M.G.~Kendall, \emph{A new measure of rank correlation}, Biometrika 30 (1938), pp. 81--93.
+\bibitem[Lin et al.(2017)]{lin2017focal}
+Lin, T.-Y., P.~Goyal, R.~Girshick, K.~He, and P.~Doll\'{a}r. 2017. \emph{Focal loss for dense object detection}. In \emph{Proceedings of the IEEE International Conference on Computer Vision (ICCV)}, 2980--2988.
 
-\bibitem{kupiec1995techniques}
-P.H.~Kupiec, \emph{Techniques for verifying the accuracy of risk measurement models}, The Journal of Derivatives 3 (1995), pp. 73--84.
+\bibitem[Liu et al.(2008)]{liu2008isolation}
+Liu, F.T., K.M.~Ting, and Z.-H.~Zhou. 2008. \emph{Isolation forest}. IEEE International Conference on Data Mining, 413--422.
 
-\bibitem{fan2025expla}
-Z.~Li and R.~Fan, \emph{Explainable heterogeneous anomaly detection in financial networks via adaptive expert routing}, IEEE Access (2025).
+\bibitem[Liu et al.(2024)]{liu2024times}
+Liu, Q., P.~Boniol, T.~Palpanas, and J.~Paparrizos. 2024. \emph{Time-series anomaly detection: Overview and new trends}. Proceedings of the VLDB Endowment 17: 4229--4232.
 
-\bibitem{lin2017focal}
-T.-Y.~Lin et al., \emph{Focal loss for dense object detection}, in \emph{Proceedings of ICCV}, 2017, pp. 2980--2988.
+\bibitem[Lundberg and Lee(2017)]{lundberg2017shap}
+Lundberg, S.M., and S.-I.~Lee. 2017. \emph{A unified approach to interpreting model predictions}. In \emph{Advances in Neural Information Processing Systems} 30.
 
-\bibitem{liu2008isolation}
-F.T.~Liu, K.M.~Ting, and Z.-H.~Zhou, \emph{Isolation forest}, IEEE International Conference on Data Mining (2008), pp. 413--422.
+\bibitem[Luo(2025)]{luo2025robus}
+Luo, X. 2025. \emph{Robust financial fraud detection via causal intervention and multi-view contrastive learning on dynamic hypergraphs}. Mathematics 13: 4018.
 
-\bibitem{liu2024times}
-Q.~Liu, P.~Boniol, T.~Palpanas, and J.~Paparrizos, \emph{Time-series anomaly detection: Overview and new trends}, Proceedings of the VLDB Endowment 17 (2024), pp. 4229--4232.
+\bibitem[Mandelbrot(1963)]{mandelbrot1963variation}
+Mandelbrot, B. 1963. \emph{The variation of certain speculative prices}. The Journal of Business 36: 394--419.
 
-\bibitem{lundberg2017shap}
-S.M.~Lundberg and S.-I.~Lee, \emph{A unified approach to interpreting model predictions}, in \emph{Advances in Neural Information Processing Systems} 30, 2017.
+\bibitem[McNeil and Frey(2000)]{mcneil2000estimation}
+McNeil, A.J., and R.~Frey. 2000. \emph{Estimation of tail-related risk measures for heteroscedastic financial time series: An extreme value approach}. Journal of Empirical Finance 7: 271--300.
 
-\bibitem{luo2025robus}
-X.~Luo, \emph{Robust financial fraud detection via causal intervention and multi-view contrastive learning on dynamic hypergraphs}, Mathematics 13 (2025), p. 4018.
+\bibitem[McNeil et al.(2015)]{mcneil2015quantitative}
+McNeil, A.J., R.~Frey, and P.~Embrechts. 2015. \emph{Quantitative Risk Management: Concepts, Techniques and Tools}, 2nd ed. Princeton University Press.
 
-\bibitem{mandelbrot1963variation}
-B.~Mandelbrot, \emph{The variation of certain speculative prices}, The Journal of Business 36 (1963), pp. 394--419.
+\bibitem[Neloy and Turgeon(2024)]{neloy2024a}
+Neloy, A.A., and M.~Turgeon. 2024. \emph{A comprehensive study of auto-encoders for anomaly detection: Efficiency and trade-offs}. SSRN Electronic Journal.
 
-\bibitem{mcneil2000estimation}
-A.J.~McNeil and R.~Frey, \emph{Estimation of tail-related risk measures for heteroscedastic financial time series: An extreme value approach}, Journal of Empirical Finance 7 (2000), pp. 271--300.
+\bibitem[Nelson(1991)]{nelson1991egarch}
+Nelson, D.B. 1991. \emph{Conditional heteroskedasticity in asset returns: A new approach}. Econometrica 59: 347--370.
 
-\bibitem{mcneil2015quantitative}
-A.J.~McNeil, R.~Frey, and P.~Embrechts, \emph{Quantitative Risk Management: Concepts, Techniques and Tools}, 2nd ed., Princeton University Press, 2015.
+\bibitem[Pang et al.(2021)]{pang2021deep}
+Pang, G., C.~Shen, L.~Cao, and A.~Van Den Hengel. 2021. \emph{Deep learning for anomaly detection: A review}. ACM Computing Surveys 54: 1--38.
 
-\bibitem{neloy2024a}
-A.A.~Neloy and M.~Turgeon, \emph{A comprehensive study of auto-encoders for anomaly detection: Efficiency and trade-offs}, SSRN Electronic Journal (2024).
+\bibitem[Parkinson(1980)]{parkinson1980extreme}
+Parkinson, M. 1980. \emph{The extreme value method for estimating the variance of the rate of return}. Journal of Business 53: 61--65.
 
-\bibitem{nelson1991egarch}
-D.B.~Nelson, \emph{Conditional heteroskedasticity in asset returns: A new approach}, Econometrica 59 (1991), pp. 347--370.
+\bibitem[Ribeiro et al.(2016)]{ribeiro2016lime}
+Ribeiro, M.T., S.~Singh, and C.~Guestrin. 2016. \emph{Why should I trust you?: Explaining the predictions of any classifier}. In \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 1135--1144.
 
-\bibitem{pang2021deep}
-G.~Pang, C.~Shen, L.~Cao, and A.~Van Den Hengel, \emph{Deep learning for anomaly detection: A review}, ACM Computing Surveys 54 (2021), pp. 1--38.
+\bibitem[Rockafellar and Uryasev(2000)]{rockafellar2000cvar}
+Rockafellar, R.T., and S.~Uryasev. 2000. \emph{Optimization of conditional value-at-risk}. Journal of Risk 2: 21--42.
 
-\bibitem{parkinson1980extreme}
-M.~Parkinson, \emph{The extreme value method for estimating the variance of the rate of return}, Journal of Business 53 (1980), pp. 61--65.
+\bibitem[Sch\"{o}lkopf et al.(2001)]{scholkopf2001estimating}
+Sch\"{o}lkopf, B., J.C.~Platt, J.~Shawe-Taylor, A.J.~Smola, and R.C.~Williamson. 2001. \emph{Estimating the support of a high-dimensional distribution}. Neural Computation 13: 1443--1471.
 
-\bibitem{ribeiro2016lime}
-M.T.~Ribeiro, S.~Singh, and C.~Guestrin, \emph{Why should I trust you?: Explaining the predictions of any classifier}, in \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 2016, pp. 1135--1144.
+\bibitem[Sharpe(1966)]{sharpe1966mutual}
+Sharpe, W.F. 1966. \emph{Mutual fund performance}. The Journal of Business 39: 119--138.
 
-\bibitem{rockafellar2000cvar}
-R.T.~Rockafellar and S.~Uryasev, \emph{Optimization of conditional value-at-risk}, Journal of Risk 2 (2000), pp. 21--42.
+\bibitem[Song(2023)]{song2023anoma}
+Song, A. 2023. \emph{Anomaly VAE-Transformer: A deep learning approach for anomaly detection in decentralized finance}. IEEE Access 11.
 
-\bibitem{scholkopf2001estimating}
-B.~Sch\"{o}lkopf, J.C.~Platt, J.~Shawe-Taylor, A.J.~Smola, and R.C.~Williamson, \emph{Estimating the support of a high-dimensional distribution}, Neural Computation 13 (2001), pp. 1443--1471.
+\bibitem[Su(2025)]{su2025anoma}
+Su, T. 2025. \emph{Anomaly detection and risk early warning system for financial time series based on the WaveLST-Trans}. Transactions on Engineering and Technology Application Intelligence.
 
-\bibitem{sharpe1966mutual}
-W.F.~Sharpe, \emph{Mutual fund performance}, The Journal of Business 39 (1966), pp. 119--138.
+\bibitem[Wang(2024)]{wang2024adapt}
+Wang, Z. 2024. \emph{Adaptive ensemble learning framework with SHAP-based feature optimization for financial anomaly detection}. AI and Machine Learning Research.
 
-\bibitem{song2023anoma}
-A.~Song, \emph{Anomaly VAE-Transformer: A deep learning approach for anomaly detection in decentralized finance}, IEEE Access 11 (2023).
+\bibitem[Zhang et al.(2024)]{wu2024anoma}
+Zhang, J., Z.~Hong, X.~Yan, and S.~Wu. 2024. \emph{Anomaly detection in financial time series based on recurrent neural networks and latent variable autoregressive models}. In \emph{Proceedings of the ACM International Conference on Multimedia}.
 
-\bibitem{su2025anoma}
-T.~Su, \emph{Anomaly detection and risk early warning system for financial time series based on the WaveLST-Trans}, Transactions on Engineering and Technology Application Intelligence (2025).
-
-\bibitem{wang2024adapt}
-Z.~Wang, \emph{Adaptive ensemble learning framework with SHAP-based feature optimization for financial anomaly detection}, AI and Machine Learning Research (2024).
-
-\bibitem{wu2024anoma}
-J.~Zhang, Z.~Hong, X.~Yan, and S.~Wu, \emph{Anomaly detection in financial time series based on recurrent neural networks and latent variable autoregressive models}, in \emph{Proceedings of the ACM International Conference on Multimedia}, 2024.
-
-\bibitem{zhou2025kanad}
-Q.~Zhou et al., \emph{KAN-AD: Time series anomaly detection with Kolmogorov-Arnold networks}, arXiv preprint arXiv:2411.00278 (2025).
+\bibitem[Zhou et al.(2025)]{zhou2025kanad}
+Zhou, Q., C.~Pei, F.~Sun, J.~Han, Z.~Gao, H.~Zhang, G.~Xie, D.~Pei, and J.~Li. 2025. \emph{KAN-AD: Time series anomaly detection with Kolmogorov-Arnold networks}. arXiv preprint arXiv:2411.00278.
 
 \end{thebibliography}
+
 \end{document}
