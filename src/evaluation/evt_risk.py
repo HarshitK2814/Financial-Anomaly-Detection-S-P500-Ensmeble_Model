@@ -120,12 +120,11 @@ def kupiec_pof(violations: np.ndarray, confidence: float = 0.99) -> Dict:
     p = 1 - confidence
     pi_hat = x / n if n else 0.0
 
-    if x == 0 or x == n:
-        lr = 0.0
-    else:
-        ll_null = x * np.log(p) + (n - x) * np.log(1 - p)
-        ll_alt = x * np.log(pi_hat) + (n - x) * np.log(1 - pi_hat)
-        lr = -2 * (ll_null - ll_alt)
+    # 0*log(0) = 0, so x = 0 or x = n still gives a finite LR
+    ll_null = x * np.log(p) + (n - x) * np.log(1 - p)
+    ll_alt = ((x * np.log(pi_hat) if x > 0 else 0.0)
+              + ((n - x) * np.log(1 - pi_hat) if x < n else 0.0))
+    lr = -2 * (ll_null - ll_alt)
     pval = 1 - stats.chi2.cdf(lr, df=1)
     return {
         'n': n, 'violations': x, 'expected': p * n,

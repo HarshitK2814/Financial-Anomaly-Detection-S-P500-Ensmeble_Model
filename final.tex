@@ -37,30 +37,64 @@
 % Custom column type to allow hyphenation in fixed-width columns
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash\hspace{0pt}}p{#1}}
 
+% Revision marker (plain text in the clean copy; changes are highlighted in the latexdiff copy)
+\newcommand{\rev}[1]{#1}
+
 \begin{document}
 
 \articletype{RESEARCH ARTICLE}
 
-\title{Explainable Regime Conditioned Mixture of Experts for Financial Anomaly Detection, Risk Capital Calibration, and Cross Market Validation}
+\title{Regime-Conditioned Mixture of Experts for Explainable Financial Anomaly Diagnosis and Risk Calibration}
 
 \author{
-\name{Prashant Hemrajani\textsuperscript{a}, Harshit Kumar\textsuperscript{a}, Sarthak Kumar\textsuperscript{a}, Shashank Shekhar\textsuperscript{a}, Varsha Himthani\textsuperscript{b}, Sayan Mahalik\textsuperscript{a}, and Manoj Kumar Bohra\textsuperscript{a}\thanks{CONTACT Manoj Kumar Bohra. Email: manojkumar.bohra@jaipur.manipal.edu}}
+\name{Prashant Hemrajani\textsuperscript{a}\thanks{CONTACT Prashant Hemrajani. Email: prashant.hemrajani@jaipur.manipal.edu}, Harshit Kumar\textsuperscript{a}, Sarthak Kumar\textsuperscript{a}, Shashank Shekhar\textsuperscript{a}, Varsha Himthani\textsuperscript{b}, Sayan Mahalik\textsuperscript{a}, and Manoj Kumar Bohra\textsuperscript{a}}
 \affil{\textsuperscript{a}Department of IoT and Intelligent Systems, Manipal University Jaipur, Jaipur, Rajasthan, India. Emails: prashant.hemrajani@jaipur.manipal.edu, harshit.23fe10cii00175@muj.manipal.edu, sarthak.23fe10cii00229@muj.manipal.edu, shashank.23fe10cii00220@muj.manipal.edu, sayanmahalik6@gmail.com, manojkumar.bohra@jaipur.manipal.edu; \textsuperscript{b}School of Computer Science Engineering and Technology, Bennett University, Greater Noida, Uttar Pradesh, India. Email: varsha.himthani@gmail.com}
 }
 
 \maketitle
-
 \begin{abstract}
-Conventional financial anomaly detection relies on static threshold models that ignore volatility regime dynamics. This causes substantial mis-calibration of capital across varied market conditions. To address this, a regime-conditioned mixture of experts (RC-MoE) architecture is proposed. It partitions the market into volatility regimes via realised-volatility quantiles and trains individual experts per regime on eight interpretable features spanning trend, momentum, volatility, market state and tail risk over a 128-day lookback. Experiments are conducted on 2,513 daily observations from the S\&P~500~(US) over 9.7~years (2016--2025) under a leakage-free protocol. Results are further extended to the NASDAQ~(US), Russell~2000~(US), and Bitcoin~(Global). Two key findings emerge. First, unconditional $\text{VaR}_{99}$ fails Kupiec coverage in high-volatility regimes while overcharging capital in stable ones, a result that holds across all four markets. Second, RC-MoE reduces signal frequency by 3.2$\times$ relative to GARCH (6.2\% vs.\ 19.6\% of trading days), improving hedging efficiency by 85\%. The regime-conditioning advantage is independently validated against a global classifier baseline. Factor regression confirms a low market beta (0.63) and near-zero alpha, while Explainability Consistency Index bootstrapping reveals that anomaly drivers shift structurally across regimes. Together, the results establish RC-MoE as a validated framework for regime-conditioned anomaly detection, risk-capital miscalibration correction, and cross-market empirical validation.
-\end{abstract}
+Anomaly detectors for finance usually use a single decision threshold for
+all market conditions, despite the changes in return distribution with the
+volatility regime. To assess whether conditioning on the volatility regime
+improves anomaly detection and risk capital calibration, we propose a
+Regime-Conditioned Mixture of Experts (RC-MoE). The proposed framework
+identifies each sample as belonging to one of three volatility regimes using
+a fusion of rolling-quantile, hidden-Markov, and static-quantile volatility
+regime detectors. Tree-based experts are then trained on eight explainable
+factors, including trend, momentum, volatility, latent market state, and
+tail risk, calculated using a 128-day rolling window for each regime.
+The problem formulation is one of same-day anomaly diagnosis. We evaluate
+the proposed methodology using 2,513 daily observations of the S\&P 500
+index from 2016--2025 within a purged temporal cross-validation framework,
+and replicate the analysis on the NASDAQ, Russell 2000, and Bitcoin.
+Regime-conditioned EVT-VaR is evaluated using the Kupiec and Christoffersen
+tests, while the hedge overlay is evaluated with an explicit implementation
+lag. Conditioning on the volatility regime improves the in-sample F1 score from
+70.3\% to 95.5\%, while the out-of-sample improvement is relatively small,
+with event-wise F1 increasing by 0.071 for the S\&P 500, 0.092 for the
+Russell 2000, and 0.012 on the pooled sample. Unconditional VaR$_{99}$ does not pass
+the coverage test in the high-volatility regime of any of the four markets,
+leading to over-reservation of Basel III capital in calm regimes by
+27--93\% and under-reservation in stress regimes by 14--24\%.
+Regime-conditioned EVT-VaR passes the Kupiec test in every volatility
+regime. The RC-MoE hedge is triggered on 6.2\% of days, compared with 19.6\% for
+GARCH. It achieves a higher, but statistically indistinguishable, Sharpe
+ratio relative to a buy-and-hold strategy when incorporating a one-day
+execution lag, and reduces market beta to 0.63 without statistically
+significant alpha. The explanatory factors vary in importance across
+regimes, with an ECI ranging from 0.646 to 0.789.
 
+Overall, conditioning on the volatility regime is strongly supported as a
+structural diagnostic and risk-calibration methodology, although its
+out-of-sample predictive value is limited.
+\end{abstract}
 \begin{keywords}
 Financial anomaly detection; mixture of experts; volatility regimes; extreme value theory; Basel III capital calibration; Value-at-Risk; explainability consistency index; S\&P 500
 \end{keywords}
 
 
 \section{Introduction}
-Financial markets can be considered complex adaptation systems wherein return distribution is known to display
+Financial markets can be considered complex adaptive systems wherein return distribution is known to display
 non-Gaussian behavior, heteroskedasticity, and structure altering regimes~\citep{mandelbrot1963variation, cont2001empirical}. The volatility clustering, fat-tails, and
 leverage effect destroy stationarity assumptions inherent in
 conventional methods for anomaly detection~\citep{bouchaud2001more, fama1970efficient}. Identification of anomalies within such markets is far from being a
@@ -95,19 +129,23 @@ yet classical econometrics and deep learning methods alike fail
 to include this regime structure in the definition of anomalous
 observations. The resulting model suffers from specification
 error due to training on unconditional returns distribution;
-such model decision boundaries will be too conservative during tranquil times and too liberal in crisis periods.
+such model decision boundaries will be too conservative during tranquil times and too liberal in crisis periods. 
+
+\textbf{Problem statement.} Given daily returns and OHLCV data, the problem addressed in this paper is to determine, for each trading day, whether its return is anomalous relative to the prevailing volatility regime rather than to the unconditional distribution, and to quantify the consequences of ignoring the regime for tail-risk measurement and regulatory capital. Existing methods leave three gaps: anomaly definitions are unconditional; regime information is not linked to formal VaR coverage tests and Basel~III capital; and explanations are not compared across regimes.
 
 Our paper begins with a distinct approach: the central challenge of detecting financial anomalies is neither the capacity
 of model construction nor its expressiveness, but the proper formulation of the task itself. Rather than creating a more expressive model, we define the problem as a regime-conditioned
 structural separability problem. The RC-MoE framework segments financial market behavior into three volatility regimes
-via a gating mechanism utilizing rolling realization volatility
+via a gating mechanism utilizing rolling realised volatility
 quantiles and trains individual expert models for each regime.
-Instead of defining anomalies as globally detected outliners,
+Instead of defining anomalies as globally detected outliers,
 anomalies are defined as regime-specific tail events where
 the threshold of detection depends on the economic condition at hand. In addition, each expert trains separately on a
 limited set of economic factors such as trend, momentum,
-volatility, tail risk, and liquidity using 128-day rolling windows. The gating function ensures that our segmentation is
+volatility, latent market state and tail risk using 128-day rolling windows. The gating function ensures that our segmentation is
 economically grounded~\citep{jacobs1991moe, alkilane2024mixma}.
+
+\textbf{Objectives.} The study pursues four objectives: (O1) to formulate same-day, regime-conditional anomaly diagnosis and to measure both its in-sample separability and its out-of-sample generalisation (Sections~\ref{sec:ablation} and~\ref{sec:multimodel}); (O2) to quantify regime-dependent VaR miscalibration and its Basel~III capital consequences with EVT and formal coverage tests (Section~\ref{subsec:var}); (O3) to assess the economic value of the signals under an explicit execution lag and relative to standard risk factors (Sections~\ref{subsec:backtest}--\ref{subsec:factor_exposure}); and (O4) to measure how the drivers of anomalies change across regimes (Sections~\ref{subsec:eci} and~\ref{sec:explainability}).
 
 Analysis using 9.7 years of daily S\&P~500 return
 data from 2016 to 2025 identifies three practical findings.
@@ -117,17 +155,12 @@ $\text{VaR}_{99}$ violates the Kupiec coverage test in volatile times
 Basel~III capital requirements are overestimated by 91\%
 in quiet regimes and underestimated by 24\% during
 crisis times, exactly when capital adequacy matters the
-most. Second, McNemar testing ($\chi^2 = 27.14$, $p < 0.001$)
-proves that regime conditioning provides a statistically
-distinguishable detection error signature; specifically, the
+most. Second, McNemar testing on a window-level test set ($\chi^2 = 27.14$, $p < 0.001$) indicates that regime conditioning produces a statistically distinct pattern of detection errors; specifically, the
 RC-MoE is a precision detector emitting high-certainty,
 rare signals on just 6.2\% of all days compared to 19.6\%
 by GARCH, and delivering an average of 85\% more hedging
 efficiency for every alert signal (0.315 vs.\ 0.170 pp reduction
-in drawdown); the F1 measure gain is not yet significant
-in the present data set (paired bootstrap $p = 0.28$); however,
-multi-market pooling is a direct solution to this statistical
-power challenge. Third, in a regression analysis involving
+in drawdown); the F1 difference is not statistically significant on this data set (paired bootstrap $p = 0.28$), and the pooled multi-market event-wise gain is small ($+0.012$), so the out-of-sample predictive benefit of regime conditioning is modest. Third, in a regression analysis involving
 six Fama-French factors, market beta is reduced to 0.63
 ($R^2 = 0.69$, $p < 0.001$), with no alpha ($\alpha = -3.74\%$
 annually, $p = 0.31$), suggesting the application of the
@@ -163,16 +196,19 @@ the market $\beta$ reducing from 1.0 to 0.63 ($R^2 = 0.69$, $p < 0.001$), and al
 with a higher efficiency of around 85\%, and hedges less frequently, only 6.2\% of trading days compared to 19.6\% hedging with GARCH.
 
 \item We develop an index to measure cross-model consistency in explaining the anomaly (Explainability
-Consistency Index, ECI), which considers the mean of normalized average pair-wise Kendall's $\tau$ coefficients between the RF, XGBoost, and LightGBM models. Bootstrapping (2{,}000 iterations) reveals
-that the drivers of the anomalies depend systematically on regimes, where the ECI increases from
-0.646 [0.536, 0.755] in the low-volatility regime to 0.789 [0.702, 0.863] in the high-volatility regime (all regimes' $z$-score $> 3.4$ compared to the random ranking null model; pairwise Wilcoxon rank-sum tests for all pairs $p<0.001$). In addition, we compare GARCH(1,1), Z-score rule, XGBoost, and
+Consistency Index, ECI), which considers the mean of normalized average pair-wise Kendall's $\tau$ coefficients between the RF, XGBoost, and LightGBM models. Bootstrapping (2{,}000 iterations) suggests
+that the drivers of the anomalies differ across regimes, where the ECI increases from
+0.646 [0.536, 0.755] in the low-volatility regime to 0.789 [0.702, 0.863] in the high-volatility regime (all regimes' $z$-score $> 3.4$ compared to the random ranking null model). In addition, we compare GARCH(1,1), Z-score rule, XGBoost, and
 LightGBM on S\&P~500 data (2016--2025) under both in-sample and 5-fold temporal protocols.
 
 \end{itemize}
+These contributions rest on two levels of evidence that are kept separate throughout the paper. The first is structural diagnosis: in-sample regime-conditional separability, the regime-conditional EVT and coverage results, and the regime-level explanation analysis. The second is predictive generalisation: the purged walk-forward detection results and the lagged economic backtest. The evidence is strong at the first level and modest at the second.
+
 The rest of this paper proceeds in the following manner.
 Section~\ref{sec:related} provides a review of related literature along four different research streams. Section~\ref{sec:methodology} outlines the entire RC-MoE
 framework, including the process of dataset creation, regime definition, feature engineering, and the mixture-of-expert architecture. Section~\ref{sec:experimental} introduces the leakage-free experimental evaluation process. Section~\ref{sec:ablation} shows results from our ablation study.
 Section~\ref{sec:multimodel} shows multimodel classification comparison, economic backtest, hedging efficiency, and conditional VaR analysis for each regime. Section~\ref{sec:explainability} describes explainability analysis, including the metric of ECI.
+Section~\ref{sec:discussion} discusses the findings, Section~\ref{sec:limitations} states the limitations, and Section~\ref{sec:conclusion} concludes.
 
 \section{Related Work}\label{sec:related}
 Financial anomaly detection involves four ongoing research
@@ -197,6 +233,8 @@ and stochastic volatility models use variance which is time varying
 and detect anomaly relative to the conditional distribution. However, these models were developed for volatility forecasting and risk
 management purposes and thus are evaluated by different criteria than precision and recall.
 
+Recent work combines these econometric tools with machine learning and extreme value theory. \citet{diaz2024volatility} examine the predictability, drivers and economic value of machine-learning forecasts of stock market volatility, and \citet{ghani2025regime} forecast industry volatility with a regime-switching GARCH-MIDAS model that includes climate risk indicators. For tail risk, \citet{candia2024evt} provide an empirical review of dynamic extreme value models for forecasting value at risk, expected shortfall and expectiles, and \citet{pourrezaee2025bitcoin} forecast Bitcoin volatility and value at risk with stacked machine-learning models on intraday data. These studies target volatility and risk forecasts rather than regime-conditional anomaly definitions.
+
 \subsection{Regime-Aware Models and Mixture-of-Experts Architecture}
 
 The concept of financial market regimes is widely used in literature
@@ -219,9 +257,14 @@ gating network has been used for deviation detection from local equity.
 It employs four experts, whose choice is arbitrary, operates on short-term OOS
 test sets without leakage-proof time-series protocol, and lacks EVT/capital adequacy analysis. The present work takes a structurally different path: regimes are defined on an observable economic variable (realized volatility), anomalies are redefined conditionally on the current regime rather than against a global distribution, and formal regulatory validation via Kupiec backtests and Basel~III capital adequacy analysis is provided as a primary contribution.
 
+\citet{malladi2026regime} use supervised machine learning on U.S. macroeconomic indicators and find that persistent bear-market regimes are forecastable whereas abrupt equity crashes are largely unpredictable, an asymmetry consistent with the modest out-of-sample gains reported in this paper. Mixture-of-experts designs have also been extended to time-series forecasting: \citet{yang2026expert} propose a fine-grained mixture-of-experts Transformer, and \citet{zhang2026act} combine an anomaly-aware causal Transformer with a mixture of experts. Both route inputs among experts for forecasting, whereas RC-MoE assigns experts by an observable volatility regime and evaluates regime-conditional anomaly diagnosis and tail-risk calibration.
+
+
 \subsection{Deep Learning for Anomaly Detection}
 
 Anomaly detection using deep learning algorithms has progressed due to developments in representation learning~\citep{darban2023deep, pang2021deep}. Recurrent networks, convolutional networks, variational autoencoders, and transformers exhibit high in-sample performance on financial time-series data~\citep{su2025anoma, wu2024anoma, cao2024autom}. Three structural issues prevent them from being used effectively in financial applications. First, rare tail observations (about 2\%) cause very severe class imbalance. Second, normalization of inputs prevents them from detecting the actual magnitude of returns that is critical for crash detection. Third, deep learning algorithms typically learn noise rather than economic structure, especially in small samples. The development of attention mechanisms, ensembles, and focal loss has led to improvements in in-sample performance but failed to solve the interpretability problem, which is a hard constraint under Basel~III/IV~\citep{arrieta2020explainable}. Long-term forecast performance is poor because regimes shift invalidating in-sample patterns~\citep{liu2024times}.
+
+Deep architectures have also been applied directly to financial anomalies. \citet{poutre2024deep} propose a Transformer-autoencoder for unsupervised anomaly detection in high-frequency limit-order-book data, \citet{mu2026fctstock} fuse convolutional and Transformer components for anomaly detection in stock volatility, and \citet{cao2026interpretable} detect financial time-series anomalies from frequency-domain features with sparse attention. These models define anomalies without reference to the prevailing volatility regime.
 
 \subsection{Interpretable Machine Learning in Finance}
 \label{subsec:rel_interpretable}
@@ -243,8 +286,10 @@ Explainability Consistency Index (ECI) that formalizes cross-model
 feature importance agreement among the expert families as well as across the volatility regimes, a regime-disaggregated
 consistency measurement that has not been addressed yet.
 
+Explainable machine learning is increasingly used for financial risk: \citet{bonewinkel2024credit} apply explainable machine-learning survival analysis to credit risk in peer-to-peer lending, and \citet{tabatabaei2026xai} combine XGBoost with SHAP for S\&P~100 firms over 2000--2025 and find that the drivers of financial distress change across market regimes. Their regime-dependent drivers parallel the regime-specific SHAP attributions and ECI reported here, which additionally measure agreement across expert families.
+
 \begin{table}[p]
-\tbl{Literature review: financial anomaly detection methods (2008--2025)}
+\tbl{Literature review: financial anomaly detection methods (1989--2026, most recent first)}
 {\scriptsize
 \renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{3pt}
@@ -253,31 +298,45 @@ consistency measurement that has not been addressed yet.
 \toprule
 \textbf{Author(s)} & \textbf{Year} & \textbf{Method} & \textbf{Dataset} & \textbf{Anomaly Target} & \textbf{Eval Paradigm} & \textbf{Regime Aware} & \textbf{XAI} & \textbf{Key Limitation} \\
 \midrule
-Liu et al.\ \citep{liu2008isolation} & 2008 & Isolation Forest & Syn./ HTTP & Global Outlier & In-sample Fit & No & No & No temporal structure; global threshold \\
-Hamilton \citep{hamilton1989a} & 1989 & Markov-Switching & US GNP & Latent State Shift & In-Sample Fit & Yes & No & Two regimes only; constant transitions \\
-Chandola et al.\ \citep{chandola2009anomaly} & 2009 & Survey Methods & Multiple & Academic Domain & Literature Review & No & No & No finance-specific evaluation \\
-Cont \citep{cont2001empirical} & 2001 & Stylized Facts & Glob.\ Equities & Empirical Fact & Descriptive Stats & No & N/A & Descriptive; no detection framework \\
-Cr\'{e}pey et al.\ \citep{crepey2022anoma} & 2022 & PCA + Neural Net & Syn.\ Finance & Global Deviation & Short-Horizon OOS & No & Low & Relies on synthetic data; supervised \\
-Song \citep{song2023anoma} & 2023 & VAE-Transformer & DeFi & Recon\-struction & Short-Horizon OOS & No & Low & Single DeFi dataset; no regime analysis \\
-Darban et al.\ \citep{darban2023deep} & 2024 & Survey: Deep TSAD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized evaluation protocol \\
-Wang \citep{wang2024adapt} & 2024 & SHAP + Ensemble & CIS Fraud & Global Deviation & Single-Period OOS & No & High & No regime conditioning; fraud-specific \\
-Cao \& Guo \citep{cao2024autom} & 2024 & RL-based selection & SWaT/ COBT & Recon\-struction & Short-Horizon OOS & No & Low & Threshold-dependent; no financial regimes \\
-Li \& Fan \citep{fan2025expla} & 2025 & Adaptive MoE + GNN & US equities & Local Deviation & Short-Horizon OOS & Yes & High & Fixed four-expert taxonomy; no VaR analysis \\
+Cao \citep{cao2026interpretable} & 2026 & Frequency features + sparse attention & Financial TS & TS Anomaly & Benchmark Test & No & High & No regime conditioning; no VaR analysis \\
+Malladi \citep{malladi2026regime} & 2026 & Supervised ML & US macro / equity indices & Bear Regimes / Crashes & Multi-Horizon OOS & Yes & Med & Abrupt crashes found largely unpredictable \\
+Mu et al.\ \citep{mu2026fctstock} & 2026 & CNN--Transformer fusion & Stock market & Volatility Anomaly & Benchmark Test & No & No & No regime conditioning; no tail-risk calibration \\
+Tabatabaei \& Mousavi \citep{tabatabaei2026xai} & 2026 & XGBoost + SHAP & S\&P 100, 2000--2025 & Financial Distress & Longitudinal Panel & Yes & High & Firm distress, not market anomalies \\
+Yang \citep{yang2026expert} & 2026 & Fine-grained MoE Transformer & Multivariate TS & Point Prediction & Benchmark Forecast & No & No & Forecasting only; no anomaly detection \\
+Zhang et al.\ \citep{zhang2026act} & 2026 & Causal Transformer + MoE & Non-stationary TS & Point Prediction & Benchmark Forecast & No & No & Forecasting objective; no regime-conditional labels \\
 Bakumenko \citep{bakumenko2025advan} & 2025 & LLM Embeddings & Gen.\ Ledger & Semantic Outlier & Short-Horizon OOS & No & Low & Limited to accounting data \\
+Ghani \& Qin \citep{ghani2025regime} & 2025 & Regime-switching GARCH-MIDAS & Climate-sensitive industries & Volatility & OOS Forecast & Yes & No & Industry volatility forecasting; no anomaly detection \\
+Li \& Fan \citep{fan2025expla} & 2025 & Adaptive MoE + GNN & US equities & Local Deviation & Short-Horizon OOS & Yes & High & Fixed four-expert taxonomy; no VaR analysis \\
+Luo \citep{luo2025robus} & 2025 & Causal Hypergraph & Yelp/ Amazon & Global Outlier & Cross-Sectional & No & Med & Complex; fraud-specific; not time-series \\
+Pourrezaee \& Hajizadeh \citep{pourrezaee2025bitcoin} & 2025 & Stacking ML + GARCH & Bitcoin intraday & Volatility / VaR & OOS Forecast & Implicit & No & Single crypto asset; no anomaly classification \\
 Su \citep{su2025anoma} & 2025 & WV+LSTM+\newline Transformer & S\&P/ Binance & Recon\-struction & Short-Horizon OOS & No & No & Static anomaly thresholds \\
 Zhou et al.\ \citep{zhou2025kanad} & 2025 & KAN-AD (Fourier) & KPI/ SMAP & Recon\-struction & Short-Horizon OOS & No & Low & Univariate focus; no financial regimes \\
 Alkilane et al.\ \citep{alkilane2024mixma} & 2024 & MixMamba MoE & ETT/ Weather & Point Prediction & Short-Horizon OOS & Yes & No & Forecasting only; no anomaly detection \\
-Luo \citep{luo2025robus} & 2025 & Causal Hypergraph & Yelp/ Amazon & Global Outlier & Cross-Sectional & No & Med & Complex; fraud-specific; not time-series \\
+Bone-Winkel \& Reichenbach \citep{bonewinkel2024credit} & 2024 & Boosted Cox survival model & Bondora P2P loans & Credit Default & Cross-Sectional & No & High & Credit-risk setting; no market anomalies \\
+Candia \& Herrera \citep{candia2024evt} & 2024 & Dynamic EVT models (review) & Stock indices & VaR / ES Tail & OOS Forecast & Implicit & No & Tail forecasts only; no anomaly classification \\
+Cao \& Guo \citep{cao2024autom} & 2024 & RL-based selection & SWaT/ COBT & Recon\-struction & Short-Horizon OOS & No & Low & Threshold-dependent; no financial regimes \\
+Darban et al.\ \citep{darban2023deep} & 2024 & Survey: Deep TSAD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized evaluation protocol \\
+D\'{\i}az et al.\ \citep{diaz2024volatility} & 2024 & ML (NN, RF, regularised) & S\&P 500 & Volatility & OOS Forecast & No & Med & Volatility forecasting; no anomaly labels \\
+Poutr\'{e} et al.\ \citep{poutre2024deep} & 2024 & Transformer autoencoder & High-freq.\ LOB & Fraudulent Sequences & Unsupervised & No & No & Intraday microstructure only; no tail-risk calibration \\
+Wang \citep{wang2024adapt} & 2024 & SHAP + Ensemble & CIS Fraud & Global Deviation & Single-Period OOS & No & High & No regime conditioning; fraud-specific \\
+Zhang et al.\ \citep{wu2024anoma} & 2024 & RNN + Latent VAR & Financial TS & Recon\-struction & Short-Horizon OOS & No & No & Black-box; requires supervised labels; no regime conditioning \\
+Song \citep{song2023anoma} & 2023 & VAE-Transformer & DeFi & Recon\-struction & Short-Horizon OOS & No & Low & Single DeFi dataset; no regime analysis \\
+Cr\'{e}pey et al.\ \citep{crepey2022anoma} & 2022 & PCA + Neural Net & Syn.\ Finance & Global Deviation & Short-Horizon OOS & No & Low & Relies on synthetic data; supervised \\
 Pang et al.\ \citep{pang2021deep} & 2021 & Survey: Deep AD & Multi-domain & Academic Domain & Literature Review & No & No & No standardized financial evaluation; regime shifts ignored \\
-Breiman \citep{breiman2001random} & 2001 & Random Forest & UCI / Finance & Global Outlier & Cross-Val OOB & No & Med & Static global threshold; no temporal or regime structure \\
-Sch\"{o}lkopf et al.\ \citep{scholkopf2001estimating} & 2001 & One-Class SVM & UCI/ Synthetic & Density Support & In-Sample CV & No & Low & Kernel choice sensitive; quadratic training cost; no temporal dynamics \\
+Chandola et al.\ \citep{chandola2009anomaly} & 2009 & Survey Methods & Multiple & Academic Domain & Literature Review & No & No & No finance-specific evaluation \\
+Liu et al.\ \citep{liu2008isolation} & 2008 & Isolation Forest & Syn./ HTTP & Global Outlier & In-sample Fit & No & No & No temporal structure; global threshold \\
 Engle \& Manganelli \citep{engle2004caviar} & 2004 & CAViaR Reg.\ Quantile & US/UK Equities & VaR Tail & Rolling OOS & Implicit & Low & Predicts conditional quantile only; no binary anomaly classification \\
-Wu et al.\ \citep{wu2024anoma} & 2024 & RNN + Latent VAR & Financial TS & Recon\-struction & Short-Horizon OOS & No & No & Black-box; requires supervised labels; no regime conditioning \\
+Breiman \citep{breiman2001random} & 2001 & Random Forest & UCI / Finance & Global Outlier & Cross-Val OOB & No & Med & Static global threshold; no temporal or regime structure \\
+Cont \citep{cont2001empirical} & 2001 & Stylized Facts & Glob.\ Equities & Empirical Fact & Descriptive Stats & No & N/A & Descriptive; no detection framework \\
+Sch\"{o}lkopf et al.\ \citep{scholkopf2001estimating} & 2001 & One-Class SVM & UCI/ Synthetic & Density Support & In-Sample CV & No & Low & Kernel choice sensitive; quadratic training cost; no temporal dynamics \\
+Hamilton \citep{hamilton1989a} & 1989 & Markov-Switching & US GNP & Latent State Shift & In-Sample Fit & Yes & No & Two regimes only; constant transitions \\
 \bottomrule
 \end{tabular}%
 }}
 \label{tab:lit_review}
 \end{table}
+
+
 
 \begin{table}[htbp]
 \tbl{Taxonomy of Financial Anomaly Detection Objectives}
@@ -291,7 +350,8 @@ Anomaly Definition & Global deviation & Regime-conditional tail \\
 Primary Objective & Forecast accuracy & Structural separability \\
 Evaluation Focus & OOS performance & In-sample regime isolation \\
 Model Preference & High-capacity DL & Interpretable factors \\
-Deployment Goal & Real-time prediction & Diagnostic analysis \\
+Information Set & Data before the target day & Data up to the close of day $t$ \\
+Deployment Goal & Real-time prediction & Same-day (ex-post) diagnosis \\
 \bottomrule
 \end{tabular}}
 \label{tab:taxonomy}
@@ -340,7 +400,7 @@ capital miscalibration assessment under leakage-free protocols.
 % ===================== METHODOLOGY =====================
 \section{Methodology}
 \label{sec:methodology}
-This subsection gives a description of the proposed RC-MoE framework. The framework has three modules: (i) a factor decomposition process which decomposes each rolling return window into eight economic factors (trends, momentum, volatility, hidden regime, and tail risks); (ii) a gated model with adaptive voting that fuses outputs of the three independent volatility detectors (rolling quantile, Gaussian HMM, and static quantile) with confidence weighting; and (iii) a regime-dependent meta-model, which assigns the factor vectors to appropriate experts based on the regime condition. In each rolling window, the framework conducts factor analysis, gating, and regime-dependent expert scoring to calculate the anomaly score. By training regime-specific expert ensembles, the anomaly structure is not mixed between calm and crisis regimes~\citep{hamilton1989a}.
+This section describes the proposed RC-MoE framework. The framework has three modules: (i) a factor decomposition process which decomposes each rolling return window into eight economic factors (trends, momentum, volatility, hidden regime, and tail risks); (ii) a gated model with adaptive voting that fuses outputs of the three independent volatility detectors (rolling quantile, Gaussian HMM, and static quantile) with confidence weighting; and (iii) a regime-dependent meta-model, which assigns the factor vectors to appropriate experts based on the regime condition. In each rolling window, the framework conducts factor analysis, gating, and regime-dependent expert scoring to calculate the anomaly score. By training regime-specific expert ensembles, the anomaly structure is not mixed between calm and crisis regimes~\citep{hamilton1989a}.
 
 The subsections below cover data and evaluation setup, regime definition, factor engineering, and the mixture-of-experts architecture.
 
@@ -358,8 +418,7 @@ first year of data, the period considered for evaluation spans 2016--2025. The
 anomalies were defined based on thresholds calculated from regime-conditional
 return distribution at the 98th percentile. Thresholds at point $t$ include only
 historical information $\{|r_0|, \ldots, |r_{t-1}|\}$ via a rolling expanding quantile (minimum
-observations of 20), so there is no forward-looking information used when
-defining the label. The anomaly frequency is approximately 2.0\%. The regimes
+observations of 20), so the label threshold uses no forward-looking information; the features themselves are contemporaneous with the labelled day (Section~\ref{sec:problem_formulation}). The anomaly frequency is approximately 2.0\%. The regimes
 were defined as low, medium, or high based on rolling quantiles of volatility,
 as detailed in Section~\ref{sec:regime_definition}.
 
@@ -378,8 +437,7 @@ returns). (iii) Table~\ref{tab:datasets} provides 95th percentile anomaly counts
 higher due to shorter window-count denominator than the raw day
 count. Downstream evaluations specify which criterion is employed.
 
-Three data integrity practices are followed: labels and features are
-based only on backward-looking data; returns are not globally
+Three data integrity practices are followed: label thresholds use only past data and features use no data beyond the close of the labelled day; returns are not globally
 normalized, allowing the retention of tail magnitudes necessary for
 crash detection; imbalanced classes are accounted for using cost-sensitive learning, without synthetic sample expansion. Pre-processing
 techniques such as SMOTE and global normalization discard precisely
@@ -390,7 +448,7 @@ different volatility regimes.
 
 \subsection{Leakage-Free Evaluation Protocol}
 \label{sec:leakage_free}
-We identified and closed six sources of look-ahead bias. Per-fold normalization: StandardScaler is fitted exclusively on each training partition and applied to the held-out test partition, replacing global Z-score normalization that would otherwise import test-set statistics. Per-fold regime classification: all three regime detectors (rolling quantile detector, Gaussian Hidden Markov Model, and static quantile detector) are recalibrated for each training partition and assign regimes to the test partition using only the final state probabilities of the training partition. Rolling expanding window anomaly labels: the threshold for labeling anomalies is calculated only based on $\{|r_0|, \ldots, |r_{t-1}|\}$ by way of expanding quantiles (with a minimum sample size of 20) so as to eliminate the circularity associated with using quantiles across the entire dataset to calculate labels. Training-only probability threshold optimization: Decision thresholds are selected solely from the probabilities outputted on the training folds, without ever using information from the test labels in the selection process. Circular block bootstrap confidence intervals: Confidence intervals are calculated with blocks of size $b = 20$ trading days in order to preserve autocorrelation of financial time series, rather than the independent identically distributed bootstrap, which yields artificially tight intervals in the case of autocorrelation.
+We identified and closed four sources of look-ahead bias in the training and labelling pipeline. Per-fold normalization: StandardScaler is fitted exclusively on each training partition and applied to the held-out test partition, replacing global Z-score normalization that would otherwise import test-set statistics. Per-fold regime classification: all three regime detectors (rolling quantile detector, Gaussian Hidden Markov Model, and static quantile detector) are recalibrated for each training partition and assign regimes to the test partition using only the final state probabilities of the training partition. Rolling expanding window anomaly labels: the threshold for labeling anomalies is calculated only based on $\{|r_0|, \ldots, |r_{t-1}|\}$ by way of expanding quantiles (with a minimum sample size of 20) so as to eliminate the circularity associated with using quantiles across the entire dataset to calculate labels.  Circular block bootstrap confidence intervals: Confidence intervals are calculated with blocks of size $b = 20$ trading days in order to preserve autocorrelation of financial time series, rather than the independent identically distributed bootstrap, which yields artificially tight intervals in the case of autocorrelation.
 
 \subsection{Problem Formulation}
 \label{sec:problem_formulation}
@@ -409,8 +467,7 @@ Let $\{P_t\}_{t=1}^{T}$ denote the daily closing prices of a financial asset. Lo
 
 where each sliding window constitutes a local regime in the
 market capturing medium- to long-term behavior characterized by volatility clustering, momentum decay, and tail risk
-accumulation~\citep{bouchaud2001more}. Both the features and labels used for training were computed based on the backward-looking data only,
-thus eliminating any potential for look-ahead bias. Nevertheless, the distributional properties of the sliding windows differ significantly depending on the regime of volatility, thus requiring that the anomaly threshold be regime-dependent.
+accumulation~\citep{bouchaud2001more}. The anomaly threshold is computed only from past returns $\{|r_0|,\ldots,|r_{t-1}|\}$. The factor vector $F_t$ and the regime $R_t$, by contrast, are computed from information available at the close of day $t$, which includes $r_t$ and the day-$t$ open, high and low used by the latent-state factors (Section~\ref{sec:factors}). Because $r_t$ enters both the features and the label, the task is classification of an observed day and not prediction of the next one. Nevertheless, the distributional properties of the sliding windows differ significantly depending on the regime of volatility, thus requiring that the anomaly threshold be regime-dependent. Formally, the primary task is same-day (ex-post) anomaly diagnosis: using the information available at the close of day $t$, the model classifies whether day $t$ is anomalous relative to its volatility regime. The detection results are therefore not forecasts of future returns, and no early-warning claim is made for them. The only deployment-oriented analysis is the economic backtest, which applies the signal with an explicit implementation lag (Section~\ref{subsec:backtest}, Table~\ref{tab:exec_lag}).
 
 \subsection{Regime-Conditioned Market States and Anomaly Definition}
 \label{sec:regime_definition}
@@ -523,9 +580,7 @@ rationale for using volatility gates on raw returns auto-correlation
 will drop very fast to zero, making returns unpredictable in direction;
 however, the squared return auto-correlation is a long memory
 process, which means there exists clustered volatility, which could
-be investigated using backward looking observation~\citep{cont2001empirical}. Each regime
-possesses around 33\% of observations, although returns distribution
-differs greatly between regimes.
+be investigated using backward looking observation~\citep{cont2001empirical}. Because the regimes are defined by dividing the observations into three equal groups, each contains roughly one-third of the observations in its calibration window, although the return patterns can differ substantially across regimes; the actual counts are reported with each result (e.g., Tables~\ref{tab:var} and~\ref{tab:coverage}).
 
 Anomalies thresholds are computed conditionally on
 the current regime, which means that the same return values
@@ -556,7 +611,7 @@ for any given regime $r$, one needs to determine the function
 $f_r : \mathbb{R}^d \rightarrow [0,1]$ such that
 $f_r(F_t^{\text{anomaly}}) > f_r(F_t^{\text{normal}})$.
 
-As tools for assessing separability, Precision, Recall, and F1-score offer diagnostic value but not assurance of generalizability. The use of such measures does not imply that decision boundaries remain constant over decades, in that results are considered to be upper limits of discrimination within the context of certain fixed definitions of regimes. Thresholds that rely on regimes ensure a constant rate of anomaly occurrence regardless of the market environment, but not so with raw returns – see the following subsection.
+As tools for assessing separability, Precision, Recall, and F1-score offer diagnostic value but not assurance of generalizability. The use of such measures does not imply that decision boundaries remain constant over decades, in that results are considered to be upper limits of discrimination within the context of certain fixed definitions of regimes. Thresholds that rely on regimes ensure a constant rate of anomaly occurrence regardless of the market environment, but not so with raw returns (see the following subsection).
 
 \subsection{Factor-Based Representation}
 \label{sec:factors}
@@ -565,11 +620,11 @@ Raw return sequences exhibit large dimensionality, strong autocorrelation, and n
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=1\textwidth]{final_figures/phase-1.pdf}
-\caption{Phase 1: Factor Engineering Pipeline. A compact set of market factors, augmented with temporal lags, captures key dynamics such as trend, momentum, volatility, and tail risk for anomaly detection.}
+\caption{Factor-engineering pipeline (Phase~1). Each 128-day OHLCV window is mapped to eight core factors (trend, momentum, composite volatility, latent states A--C, kurtosis and skewness), each augmented with 1- and 5-day lags to form the 24-dimensional model input.}
 \label{fig:phase1_pipeline}
 \end{figure*}
 
-Table~\ref{tab:factor_summary} summarizes the full library of factors grouped by economic type. For all of our experiments, we use a subset of eight factors (return trend, momentum, composite volatility, three latent-state factors, and the kurtosis and skewness tail factors). Further factors of range-based volatility, liquidity, and persistence estimates are introduced here for completeness, forming the full library that is fully evaluated in future research. Below we provide a description of all factors from the entire library, and mark eight key factors used in Table~\ref{tab:factor_summary}.
+The full library of factors is described below, grouped by economic type. For all of our experiments, we use a subset of eight factors (return trend, momentum, composite volatility, three latent-state factors, and the kurtosis and skewness tail factors). Further factors of range-based volatility, liquidity, and persistence estimates are introduced here for completeness, forming the full library that is fully evaluated in future research. Below we describe all factors in the library and identify the eight core factors used in all experiments.
 
 Trend and Momentum: Return Trend refers to the trend over a medium-term period and is defined as:
 \begin{equation}
@@ -638,12 +693,12 @@ To incorporate limited temporal context without sequence models, each of the eig
     \label{eq:factor}
 \end{equation}
 
-The factor extraction pipeline transforms the raw OHLCV sequences into the 24-dimensional core factor space; the successful separation of crisis vs. normal states in this projection is proof that the compact representation maintains the discriminative information necessary for regime-dependent anomaly detection. By using factor representations instead of raw sequences, our approach makes the structure of the market explicit without any of the noise, and retains information about return size, which is normally lost during deep learning because of normalization. This compact yet informative representation forms the inputs for the regime-dependent Mixture of Experts approach, whose regime detection and routing architecture is depicted in Fig.~\ref{fig:phase2_regime}.
+The factor extraction pipeline transforms the raw OHLCV sequences into the 24-dimensional core factor space; the successful separation of crisis vs. normal states in this projection indicates that the compact representation retains the discriminative information necessary for regime-dependent anomaly detection. By using factor representations instead of raw sequences, our approach makes the structure of the market explicit without any of the noise, and retains information about return size, which is normally lost during deep learning because of normalization. This compact yet informative representation forms the inputs for the regime-dependent Mixture of Experts approach, whose regime detection and routing architecture is depicted in Fig.~\ref{fig:phase2_regime}.
 
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=1\textwidth, height=0.58\textheight, keepaspectratio=false]{final_figures/phase-2.pdf}
-\caption{Phase 2: Adaptive Regime Detection and Routing System. A confidence-weighted fusion of multiple regime detectors identifies market states and dynamically routes inputs to the most appropriate regime-specific expert ensembles.}
+\caption{Regime detection and routing (Phase~2). Rolling-quantile, Gaussian-HMM and static-quantile detectors are fused by confidence-weighted voting; observations with fused confidence $C_t \ge 0.6$ are routed to a single expert (hard routing) and the rest are split across adjacent experts (soft routing).}
 \label{fig:phase2_regime}
 \end{figure*}
 
@@ -660,10 +715,7 @@ where $R$ is the latent market regime. Standard anomaly detectors implicitly col
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=1\textwidth ]{final_figures/phase-3.png}
-\caption{Phase 3: Meta-Ensemble Learning Architecture Conditioned on Regimes.
-Adaptive gates route inputs to volatility-specific expert ensembles, whose predictions
-are combined through regime-specific meta-learners to generate final anomaly
-probability scores.}
+\caption{Regime-conditioned meta-ensemble (Phase~3). Each regime has its own RF, XGBoost and LightGBM experts, whose probabilities are combined by a regime-specific meta-learner into the final anomaly probability.}
 \label{fig:phase3_moe}
 \end{figure*}
 
@@ -683,7 +735,7 @@ Each regime $k \in \{0, 1, 2\}$ is handled by a pool of $M$ independent experts 
     E_k^{(m)} : F_t \rightarrow \hat{P}^{(m)}(A_t = 1 \mid F_t, R_t = k),
     \label{eq:expert}
 \end{equation}
-where $m \in \{1, \ldots, M\}$ indexes the expert model family. Six distinct model families are employed per regime, spanning both tabular and sequential inductive biases.
+where $m \in \{1, \ldots, M\}$ indexes the expert model family. Three tree-based model families are used in all reported results; three further deep-learning families were explored but are not evaluated (Section~\ref{subsubsec:explored}).
 
 Tree-Based Experts: Three complementary tree ensemble families provide the foundation. Random Forest classifiers with $n_{\text{estimators}} = 200$ and maximum depth of 5 serve as baseline experts, with class-balanced sample weighting to handle the approximately 2\% anomaly prevalence \citep{breiman2001random}. XGBoost experts \citep{chen2016xgboost} employ gradient boosting with $n_{\text{estimators}} = 200$, maximum depth of 5, $L_1$ regularization ($\alpha = 0.1$), $L_2$ regularization ($\lambda = 1.0$), and auto-computed scale\_pos\_weight to address class imbalance. LightGBM experts \citep{ke2017lightgbm} use leaf-wise (best-first) tree growth with $n_{\text{estimators}} = 200$, $\text{num\_leaves} = 31$, and the is\_unbalance flag for automatic class weighting. The gradient boosting architectures provide complementary inductive biases to Random Forest, with built-in regularization preventing overfitting on the small per-regime sample sizes.
 
@@ -713,7 +765,7 @@ with $\alpha = 0.75$ and $\gamma = 2.0$, which down-weights well-classified norm
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.98\textwidth]{final_figures/fig_m3_topological_boundaries.png}
-\caption{Dependent regime anomaly boundaries: There is substantial variation in anomaly behavior among volatility regimes, indicating that there cannot be just one decision boundary for all.
+\caption{Decision boundaries of the regime-specific expert pools in a two-factor projection (S\&P~500, 2016--2025, in-sample). Markers show anomalous windows in the low-, medium- and high-volatility regimes.
 }
 \label{fig:topological_boundaries}
 \end{figure*}
@@ -725,7 +777,7 @@ This regime dependence is also visible directly in the feature space. Figure~\re
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.98\textwidth]{final_figures/fig3_regime_tsne_kde.png}
-  \caption{Anomalies have different behaviors within different volatility regimes, and there are anomalies and return distribution patterns in low, medium, and high volatility regimes.
+  \caption{t-SNE projection of the 24-dimensional factor windows by volatility regime, with kernel densities of the return-trend factor per regime (S\&P~500, 2016--2025). Stars mark anomalous windows.
 }
   \label{fig:regime_tsne}
 \end{figure*}
@@ -733,8 +785,7 @@ This regime dependence is also visible directly in the feature space. Figure~\re
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.98\textwidth]{final_figures/fig6_regime_patterns.png}
-  \caption{Windows from various volatilities display different characteristics in prices, anomalies, and volumes, proving the necessity of using expert models on each regime separately.
-}
+  \caption{Representative 128-day price and volume windows from the low-, medium- and high-volatility regimes (S\&P~500), with anomalous days marked.}
   \label{fig:regime_patterns}
 \end{figure*}
 
@@ -895,7 +946,7 @@ In regard to risk management, Recall carries more importance: a failure to detec
 \subsection{Statistical Considerations}
 \label{subsec:statistical}
 % ----------------------------------------------------------------
-Since there are only $n < 60$ instances of anomalies observed per each regime within a decade-long analysis, confidence intervals and hypothesis testing methods lack statistical power in this case. For confidence intervals, we use the technique of circular block bootstrap for estimating them, where the bootstrap blocks consist of $b=20$ trading days. This helps us to preserve autocorrelation in financial returns. The results are reported per each regime sample size.
+Since there are only $n < 60$ instances of anomalies observed per each regime within a decade-long analysis, confidence intervals and hypothesis testing methods lack statistical power in this case. For confidence intervals, we use the technique of circular block bootstrap for estimating them, where the bootstrap blocks consist of $b=20$ trading days. This helps us to preserve autocorrelation in financial returns. The results are reported per each regime sample size. Bootstrap resampling preserves serial dependence but cannot add information that is absent from a sparse tail sample. Regime-level estimates, in particular those for the low-volatility regime, are therefore reported with their event counts and interpreted as indicative.
 
 % ================================================================
 % SECTION VI - ABLATION STUDY
@@ -918,7 +969,7 @@ Six variations of the models are considered for the entire decade period (2016-2
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.6\textwidth]{final_figures/ablation_chart_paper.png}
-  \caption{Ablation study F1 scores. Each bar represents a successive addition of the RC-MoE components.}
+  \caption{In-sample F1 of the ablation variants on the S\&P~500 (2016--2025): standard-deviation rule, Z-score, ConvVAE, Anomaly Transformer, global Random Forest and RC-MoE.}
   \label{fig:ablation}
 \end{figure*}
 
@@ -944,41 +995,65 @@ From our ablation study shown in Fig.~\ref{fig:ablation}, we observe the followi
 \label{subsec:sensitivity}
 % ----------------------------------------------------------------
 
-The important consideration when reviewing a window-based approach is whether the findings presented can be considered as a property intrinsic to the selected set of hyperparameters. In order to resolve this issue, all possible configurations are studied for window length $L = \{64, 96, 128, 192\}$ number of trading days combined with $K = \{2, 3, 4\}$ regimes using the RF expert classifier alone (a reduced version of the original RF + XGBoost + LightGBM meta-classifier) for computational feasibility. The in-sample F1 score is provided in Table~\ref{tab:sensitivity}.
+The important consideration when reviewing a window-based approach is whether the findings presented can be considered as a property intrinsic to the selected set of hyperparameters. In order to resolve this issue, all possible configurations are studied for window length $L = \{64, 96, 128, 192\}$ number of trading days combined with $K = \{2, 3, 4\}$ regimes first with the RF expert alone and then with the full RF + XGBoost + LightGBM expert. Table~\ref{tab:sensitivity} reports, for every configuration, the in-sample F1 and the out-of-sample F1 under 5-fold temporal cross-validation with a 128-day purge gap, and Table~\ref{tab:sensitivity_ens} repeats the out-of-sample evaluation with the full RF+XGBoost+LightGBM expert\rev{ (Figure~\ref{fig:sensitivity_oos})}.
 
-\begin{table}[H]
-\tbl{Hyperparameter sensitivity: in-sample structural F1 (\%) across window sizes $L$ and regime counts $K$ (RF component only; S\&P~500, 2016--2025)}
+\begin{table}[htbp]
+
+\tbl{Hyperparameter sensitivity of in-sample (IS) and out-of-sample (OOS) F1 (\%) across window sizes $L$ and regime counts $K$ (RF expert; S\&P~500, 2016--2025; OOS = 5-fold temporal CV with 128-day purge).}
 {\renewcommand{\arraystretch}{1.25}
-\setlength{\tabcolsep}{7pt}
-\begin{tabular}{lccc}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Window $L$} & \textbf{$K=2$} & \textbf{$K=3$} & \textbf{$K=4$} \\
+ & \multicolumn{3}{c}{\textbf{IS F1}} & \multicolumn{3}{c}{\textbf{OOS F1}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+\textbf{Window $L$} & $K=2$ & $K=3$ & $K=4$ & $K=2$ & $K=3$ & $K=4$ \\
 \midrule
-64 days  & 76.3 & 85.0 & 87.2 \\
-96 days  & 79.7 & 87.8 & 86.8 \\
-\textbf{128 days} & \textbf{83.3} & \textbf{80.0} & \textbf{95.8} \\
-192 days & 67.6 & 78.6 & 82.1 \\
-\midrule
-Range    & 67.6--83.3 & 78.6--87.8 & 82.1--95.8 \\
+64 days  & 76.3 & 85.0 & 87.2 & \textbf{7.3} & 0.0 & 0.0 \\
+96 days  & 79.7 & 87.8 & 86.8 & 3.4 & \textbf{4.2} & 0.0 \\
+128 days & 83.3 & 80.0 & 95.8 & 0.0 & \textbf{3.5} & 0.0 \\
+192 days & 67.6 & 78.6 & 82.1 & 8.9 & \textbf{9.5} & 4.7 \\
 \bottomrule
 \end{tabular}}
 \label{tab:sensitivity}
+\vspace{7pt}
+\tbl{OOS F1 (\%) of the full RC-MoE expert (RF + XGBoost + LightGBM probability average, fixed threshold $\tau=0.50$) across window sizes $L$ and regime counts $K$; precision/recall (\%) in parentheses (S\&P~500, 2016--2025).}
+{\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Window $L$} & $K=2$ & $K=3$ & $K=4$ \\
+\midrule
+64 days  & \textbf{6.0} (11.1 / 4.1) & 2.5 (3.3 / 2.0) & 0.0 (0.0 / 0.0) \\
+96 days  & 3.3 (2.6 / 4.3) & \textbf{7.8} (50.0 / 4.3) & 3.2 (6.7 / 2.1) \\
+128 days & \textbf{38.8} (59.1 / 28.9) & 11.1 (33.3 / 6.7) & 20.0 (40.0 / 13.3) \\
+192 days & \textbf{10.8} (11.8 / 10.0) & 7.0 (11.8 / 5.0) & 4.0 (10.0 / 2.5) \\
+\bottomrule
+\end{tabular}}
+\tabnote{Same data, labels, folds, purge and training-fold regime thresholds as Table~\ref{tab:sensitivity}; only the expert differs. Bold indicates the best $K$ in each row.}
+\label{tab:sensitivity_ens}
+
 \end{table}
 
-Four trends emerge. To begin with, F1 in-sample is consistently high above the baseline (${\approx}4.7\%$) of random selection for all possible settings (range 67.6\%-95.8\%) and therefore supports the notion that separability under the regimes represents a true structural property of the data. Moreover, $K=4$ is the model configuration that yields the highest in-sample F1 score for $L=128$ (95.8\%) when using RFs only, which is equivalent to the ensemble model with $K=3$ (95.5\%). However, this seeming superiority is an effect of in-sample memorization since there are only approximately 14 anomalies per expert; the RF overfits patterns specific to the regime that generalize poorly; $K=3$ was preferred over $K=4$ because the former fits with the conventional three states of volatility (calm, transition, and crisis) in the financial literature~\citep{hamilton1989a, ang2002regime}. Third, the choice of $L=128$ was made on the basis of interpretability, not simply on maximization of the IS-F1 metric: 128 trading days or roughly 6 calendar months corresponds to one medium-term market cycle, provides sufficient duration to measure stable tail risks, and accords with rolling risk window conventions; shorter rolling windows (with $L\in\{64,96\}$) provide slightly better IS-F1 scores with $K=3$, but only pick up noise patterns. Fourth, out-of-sample evaluation using the reference window size $L = 128$ demonstrates conclusively that only $K = 3$ yields positive out-of-sample F1 (OOS-F1) scores ($3.5\%$, $5$-fold temporal cross-validation with $128$-day purge period): whereas $K=2$ fails to have enough regimes (OOS-F1 score $0.0\%$) to extract anomalies unique to each individual regime, $K=4$ simply memorizes the scarce number of examples from each individual regime (OOS-F1 score $0.0\%$), but does not generalize. This is where OOS validation justifies our three-regime model as the minimum structure resolution for anomaly identification outside of sample.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{final_figures/fig_sensitivity_oos.png}
+\caption{Out-of-sample F1 (\%) across window sizes $L$ and regime counts $K$ with (a) the Random Forest expert and (b) the full RF + XGBoost + LightGBM expert (S\&P~500, 2016--2025; 5-fold temporal cross-validation with a 128-day purge). Bold values mark the best $K$ in each row; the outlined cell is the configuration used in the paper ($L=128$, $K=3$).}
+\label{fig:sensitivity_oos}
+\end{figure}
 
+Four observations follow. First, in-sample F1 is far above the random baseline (anomaly rate ${\approx}2.4\%$) in every configuration (67.6--95.8\%), which supports regime-conditional separability as a structural property of the data rather than an artefact of one setting. Second, in-sample F1 is not a reliable guide to the choice of $K$: each expert sees only a few dozen anomalies, so the in-sample score varies non-monotonically with $K$ (at $L=128$, $K=3$ scores below $K=2$, and $K=4$ reaches 95.8\%). Third, the in-sample peak of $K=4$ does not carry over out of sample: with the RF expert, $K=4$ has the lowest or tied-lowest out-of-sample F1 at every window length (0.0--4.7\%), and with the full expert it is never the best configuration. Fourth, no value of $K$ is best out of sample across both experts: $K=3$ is best with the RF expert at three of four window lengths, but with the full expert $K=2$ is best at three of four window lengths, including the reference window $L=128$ (38.8\% against 11.1\% for $K=3$), and $K=3$ is best only at $L=96$. Absolute out-of-sample values are low in most configurations and vary strongly with the expert, in line with the gap between structural separability and predictive generalisation discussed in Section~\ref{subsec:disc_separability}. A purely statistical criterion does not settle the question either: Gaussian hidden Markov models fitted to log window volatility at $L=128$ give BIC values of 447.8, $-1791.7$ and $-3096.6$ for $K=2$, 3 and 4, so the fit keeps improving as states are added and no finite optimum is identified in this range. We therefore retain $K=3$ as a modelling choice rather than a data-optimal one: it matches the conventional calm, transition and crisis volatility states~\citep{hamilton1989a, ang2002regime}, keeps enough anomalies per expert for the per-regime EVT and explainability analyses of Sections~\ref{sec:multimodel} and~\ref{sec:explainability}, and avoids the out-of-sample collapse of $K=4$. The out-of-sample advantage of $K=2$ at $L=128$ is reported as a limitation (Section~\ref{sec:limitations}). $L=128$ (about six calendar months) was chosen for interpretability, as one medium-term market cycle long enough to estimate tail statistics, rather than by maximising in-sample F1.
 % ================================================================
 % SECTION VII - MULTI-MODEL COMPARISON AND ECONOMIC EVALUATION
 % ================================================================
 \section{Multi-Model Comparison and Economic Evaluation}
 \label{sec:multimodel}
 
-In this section, the RC-MoE will be compared to econometric benchmarks and global machine learning models on real-world S\&P 500 returns for the period of 2016 to 2025 at a daily level. Daily input data includes multi-horizon rolling returns (5/10/20/60-day), realized volatility, momentum, kurtosis, skewness, and GARCH(1,1) conditional volatility, ensuring that all methods are on equal representative ground. Fig.~\ref{fig:radar_overview} below captures the multi-faceted trade-off to be dissected metric-wise throughout the rest of the section, wherein the RC-MoE is superior in terms of detection precision, event-F1, hedging efficacy, annualized return, and Sortino ratio, whereas the GARCH benchmark wins on recall and alert volume.
+In this section, the RC-MoE will be compared to econometric benchmarks and global machine learning models on real-world S\&P 500 returns for the period of 2016 to 2025 at a daily level. Daily input data includes multi-horizon rolling returns (5/10/20/60-day), realized volatility, momentum, kurtosis, skewness, and GARCH(1,1) conditional volatility, ensuring that all methods are on equal representative ground. Fig.~\ref{fig:radar_overview} below captures the multi-faceted trade-off to be dissected metric-wise throughout the rest of the section, wherein the RC-MoE leads the machine-learning detectors on precision and leads on hedging efficiency, annualized return and Sortino ratio, whereas the GARCH benchmark leads on recall and event-F1.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{final_figures/fig1_radar_overview.png}
-  \caption{Radar comparison of RC-MoE and benchmark detectors across the main detection and risk-adjusted metrics.}
+  \caption{Radar comparison of RC-MoE and the benchmark detectors on detection precision, recall, event-F1, Sharpe ratio, annualised return, drawdown protection, hedging efficiency and Sortino ratio (S\&P~500; values from Tables~\ref{tab:oos_comparison} and~\ref{tab:backtest}).}
   \label{fig:radar_overview}
 \end{figure}
 
@@ -990,7 +1065,7 @@ In this section, the RC-MoE will be compared to econometric benchmarks and globa
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=0.95\textwidth]{final_figures/oos_performance_chart.png}
-    \caption{Out-of-sample detection by model family: econometric detectors favor recall, machine-learning detectors favor precision with fewer signals.}
+    \caption{Out-of-sample precision, recall and event-F1 ($\pm$3-day tolerance) of each detector under 5-fold temporal cross-validation (S\&P~500 daily returns, 2{,}455 days, 76 anomalies).}
     \label{fig:oos_classification}
 \end{figure*}
 
@@ -1017,6 +1092,7 @@ LightGBM Global & 41.2 & 36.2 & 38.5 & 0 \\
 \textbf{LightGBM RC-MoE} & 54.3 & 32.8 & 40.9 & 0 \\
 \bottomrule
 \end{tabular}}
+\tabnote{Prec.: precision. Event-F1 counts a detection within $\pm3$ trading days of a true anomaly. ``1st'': number of metrics on which the detector ranks first.}
 \label{tab:oos_comparison}
 \end{table}
 
@@ -1025,7 +1101,7 @@ These events are contextualized temporally in Fig.~\ref{fig:detection_timeline},
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.8\textwidth]{final_figures/fig4_anomaly_detection_zoom.png}
-  \caption{Results from out-of-sample S\&P 500 (2016-2025) indicate that the RC-MoE model is better at anomaly detection during different regimes of volatility, including the COVID-19}
+  \caption{Volatility regimes, ground-truth anomalies and RC-MoE and GARCH detections over the out-of-sample S\&P~500 period, with an enlarged view of the February--March 2020 COVID-19 crash; panel (d) shows the RC-MoE anomaly probability.}
   \label{fig:detection_timeline}
 \end{figure*}
 
@@ -1045,7 +1121,7 @@ These events are contextualized temporally in Fig.~\ref{fig:detection_timeline},
 Table~\ref{tab:regime_conditioning} shows the impact of the three-regime system by contrasting each type of model's corresponding global model with its MoE version, while keeping all other aspects constant (features, labels, class weighting, tree depth).
 
 \begin{table}[!t]
-\tbl{Regime conditioning impact: global vs. MoE (in-sample; all other factors held constant)}
+\tbl{Regime conditioning impact: global vs.\ MoE (5-fold temporal CV precision; backtest Sharpe, annualised return and hedging efficiency; all else held constant)}
 {\footnotesize
 \renewcommand{\arraystretch}{1.25}
 \setlength{\tabcolsep}{3pt}
@@ -1062,17 +1138,18 @@ XGBoost  & MoE          & \textbf{48.94} & \textbf{0.748} & \textbf{14.57} & \te
 \multicolumn{2}{l}{\textit{Improvement} $(\Delta)$} & \textit{$+$7.3\%}  & \textit{$+$16.3\%} & \textit{$+$14.8\%} & \textit{$+$26.7\%} \\
 \bottomrule
 \end{tabular}}
+\tabnote{Eff.: hedging efficiency, percentage points of maximum-drawdown reduction per detection (Eq.~\eqref{eq:hedge_eff}).}
 \label{tab:regime_conditioning}
 \end{table}
 
-In-sample structural performance of regime conditioning increases on all four metrics in both classes of models (Table~\ref{tab:regime_conditioning}). The improvement in precision by $+32\%$ for the LightGBM model from $41.2\%$ to $54.3\%$ corresponds to a clear structural advantage in terms of threshold regimes relative to a global threshold boundary and should be viewed as a purely in-sample diagnostic upper bound. A formally independent statistical verification using the 5-fold temporal CV experiment and McNemar test ($\chi^2=27.14$, $p<0.001$) demonstrates the statistical difference between the two algorithms, with the MoE variant being less precise but having higher recall rates corresponding to its regime-conditional threshold structure widening the anomaly detection scope during periods of elevated volatility. The difference between F1-scores is not yet statistically significant at the current sample size ($\textit{bootstrap} \ p=0.28$, $n=15$ anomalies), a power limitation addressed by multi-market extension (Section~\ref{sec:multimodel}).
+Regime conditioning improves all four metrics for both model families (Table~\ref{tab:regime_conditioning}). For LightGBM, precision under 5-fold temporal cross-validation rises by 32\%, from 41.2\% to 54.3\%. A separate window-level test (810 out-of-sample windows, 15 anomalies) gives a McNemar statistic of $\chi^2=27.14$ ($p<0.001$), showing that the two variants make statistically different errors. The F1 difference on that test set is not statistically significant (bootstrap $p=0.28$), which reflects the small number of anomalies; the multi-market extension (Section~\ref{subsubsec:multimarket}) addresses this with 435 events.
 
 Figure~\ref{fig:detection_panels} shows four detectors plotted in parallel for the same out-of-sample window: $3\sigma$, GARCH(1,1) $2\sigma$, the globally trained LightGBM, and RC-MoE. On the left is shown detection points, while the right panel illustrates the signals or probabilities used to produce them. While the latter are focused on the true tail events, the former tend to be somewhat scattered.
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.9\textwidth]{final_figures/fig8_detection_panels.png}
-  \caption{Comparison of anomaly detectors on the S\&P 500: detection points (left) and the underlying signals or probabilities (right).}
+  \caption{Detections (left) and underlying scores (right) of the $3\sigma$ rule, GARCH(1,1) $2\sigma$, the global LightGBM and RC-MoE on the same out-of-sample S\&P~500 window.}
   \label{fig:detection_panels}
 \end{figure*}
 
@@ -1086,17 +1163,17 @@ Fig.~\ref{fig:regime_heatmap} displays precision and recall results for anomaly 
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=0.6\textwidth]{final_figures/per_regime_heatmap.png}
-    \caption{Per-regime precision and recall comparison between LightGBM RC-MoE and GARCH-based detection under temporal cross-validation.}
+    \caption{Out-of-sample precision and recall by volatility regime for LightGBM RC-MoE and GARCH(1,1) (5-fold temporal CV, S\&P~500; 4, 16 and 56 anomalies in the low-, medium- and high-volatility regimes).}
     \label{fig:regime_heatmap}
 \end{figure*}
 
-LightGBM RC-MoE reaches significantly higher precision compared to GARCH in the moderate volatility regime ($75.0\%$ versus $25.7\%$) and in the high-volatility regime ($51.6\%$ versus $48.4\%$). GARCH has higher recall due to larger number of detections overall in all regimes but with an unacceptably higher rate of false alarms. The reason behind zero precision of the low-volatility regime is the scarcity of anomalies in stable regimes due to very low signal-to-noise ratio ($4$ out of $634$ occurrences). The two algorithms supplement each other, which results in complementary use of both algorithms in practice.
+LightGBM RC-MoE reaches higher precision than GARCH in the moderate volatility regime ($75.0\%$ versus $25.7\%$) and in the high-volatility regime ($51.6\%$ versus $48.4\%$). GARCH has higher recall due to larger number of detections overall in all regimes but with an unacceptably higher rate of false alarms. The reason behind zero precision of the low-volatility regime is the scarcity of anomalies in stable regimes due to very low signal-to-noise ratio ($4$ out of $634$ occurrences). Low-volatility estimates therefore rest on only four anomalies and should be read as indicative. The two algorithms supplement each other, which results in complementary use of both algorithms in practice.
 
 % ----------------------------------------------------------------
 \subsection{Economic Backtest}
 \label{subsec:backtest}
 % ----------------------------------------------------------------
-The valuation of economic value added from the models through hedge via the anomalies is provided in Table~\ref{tab:backtest} in terms of: On detection of the anomaly on day $d$, conversion of equity portfolio into a riskless cash position with interest of 4\% for the next 5 days. Performance of the portfolios is measured in terms of annualized return, Sharpe ratio~\citep{sharpe1966mutual}, maximum drawdown (Max DD), and Sortino ratio. Evaluation metrics have been calculated across one fixed period only. The transaction costs are not included in the headline results, which will be followed by a sensitivity analysis. Using an estimated conservative execution cost of 5 basis points (as per the cost associated with S\&P~500 ETF/index futures), the number of hedged days (of 5-day holding period) for LightGBM RC-MoE is 152, incurring a cumulative drag of ${\approx}30$~bp (${\approx}3$~bp per annum), reducing annualized return from $15.27\%$ to ${\approx}15.24\%$; the performance ranking is unchanged. By contrast, GARCH at 19.6\% hedged days shows approximately 96 activations (${\approx}10$~bp per annum drag), making it comparatively more sensitive to transaction-cost assumptions and further increasing the hedging-efficiency advantage of the RC-MoE.
+The valuation of economic value added from the models through hedge via the anomalies is provided in Table~\ref{tab:backtest} in terms of: On detection of the anomaly on day $d$, conversion of equity portfolio into a riskless cash position with interest of 4\% for the next 5 days. Performance of the portfolios is measured in terms of annualized return, Sharpe ratio~\citep{sharpe1966mutual}, maximum drawdown (Max DD), and Sortino ratio. Evaluation metrics have been calculated across one fixed period only. Transaction costs are not included in the headline results; a sensitivity analysis follows, and Table~\ref{tab:exec_lag} reports costs of 0--20~bp per switch under an explicit execution lag. Using an estimated conservative execution cost of 5 basis points (as per the cost associated with S\&P~500 ETF/index futures), the number of hedged days (of 5-day holding period) for LightGBM RC-MoE is 152, incurring a cumulative drag of ${\approx}30$~bp (${\approx}3$~bp per annum), reducing annualized return from $15.27\%$ to ${\approx}15.24\%$; the performance ranking is unchanged. By contrast, GARCH at 19.6\% hedged days shows approximately 96 activations (${\approx}10$~bp per annum drag), making it comparatively more sensitive to transaction-cost assumptions and further increasing the hedging-efficiency advantage of the RC-MoE.
 
 Two features of Table~\ref{tab:backtest} merit emphasis before the detailed discussion. First, the ranking is governed by \emph{risk-adjusted} rather than raw return. Although the XGBoost MoE posts a marginally higher annualized return ($14.57\%$) than the LightGBM Global baseline ($14.07\%$), regime specialization lifts the LightGBM variant to the top of both the return ($15.27\%$) and the Sortino ($0.964$) columns simultaneously. The Sortino dominance is the more informative of the two, since it penalizes only downside deviation and therefore rewards a detector that suppresses left-tail episodes without over-trading in benign conditions. Second, the hedged-day column quantifies operational burden in a way the return statistics cannot: RC-MoE attains its result while sitting in cash on only $6.2\%$ of trading days, against $9.2\%$ for the global model and $19.6\%$ for the most active GARCH configuration. A lower intervention count translates directly into reduced turnover, smaller cumulative slippage, and greater strategy capacity, and it is precisely this efficiency that the basis-point cost figures above render explicit.
 
@@ -1116,12 +1193,51 @@ GARCH(1,1) $2.5\sigma$  & 14.33\% & 0.702 & 22.86\% & 0.830 &  9.4\% \\
 XGBoost MoE             & 14.57\% & 0.748 & 21.62\% & 0.929 &  8.4\% \\
 LightGBM Global         & 14.07\% & 0.717 & 18.00\% & 0.874 &  9.2\% \\
 \textbf{LightGBM MoE}   & \textbf{15.27\%} & 0.772 & 20.71\% & \textbf{0.964} & \textbf{6.2\%} \\
-\midrule
+\bottomrule
 \end{tabular}}
+\tabnote{Hedged: share of trading days in cash; 5-day hold after each detection; cash earns 4\% p.a.; no transaction costs. An explicit execution lag and costs are evaluated in Table~\ref{tab:exec_lag}.}
 \label{tab:backtest}
 \end{table}
 
 During the complete 2016--2025 evaluation window period (including the COVID-19 crash, which is conducive to hedging), all ML strategies provide better performance than the B\&H strategy after adjusting for risk. LightGBM RC-MoE gives the best annual return and Sortino ratio (15.27\% and 0.964, respectively) while having the lowest percentage of intervention at just 6.2\% of the trading days among all other strategies (Table~\ref{tab:backtest}). However, GARCH gives the best Sharpe ratio (0.777) and the highest drawdown reduction, but needs intervention in 19.6\% of the trading days.
+
+\begin{table}[H]
+\tbl{Execution-lag backtest of the RC-MoE overlay on dated out-of-sample S\&P~500 signals (20 Dec 2018 -- 29 Dec 2025, 1{,}765 days; 5-day hold; cash at 4\%)}
+{\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Strategy} & \textbf{Lag $k$} & \textbf{Cost (bp)} & \textbf{Ann.\ Ret.} & \textbf{Sharpe} & \textbf{Sortino} & \textbf{Max DD} & \textbf{Hedged} & \textbf{Switches} \\
+\midrule
+Buy-and-Hold & -- & -- & 15.57\% & 0.577 & 0.705 & 33.92\% & 0.0\% & 0 \\
+\midrule
+RC-MoE (same day) & 0 & 0 & 17.99\% & 0.975 & 1.149 & 16.80\% & 26.2\% & 22 \\
+\midrule
+RC-MoE & 1 & 0 & 15.35\% & 0.794 & 0.911 & 21.59\% & 26.2\% & 22 \\
+RC-MoE & 1 & 5 & 15.17\% & 0.781 & 0.897 & 21.75\% & 26.2\% & 22 \\
+RC-MoE & 1 & 10 & 14.99\% & 0.768 & 0.883 & 21.90\% & 26.2\% & 22 \\
+RC-MoE & 1 & 20 & 14.62\% & 0.742 & 0.854 & 22.22\% & 26.2\% & 22 \\
+\midrule
+RC-MoE & 2 & 0 & 15.63\% & 0.813 & 0.923 & 20.45\% & 26.2\% & 22 \\
+RC-MoE & 2 & 5 & 15.45\% & 0.800 & 0.911 & 20.61\% & 26.2\% & 22 \\
+RC-MoE & 2 & 10 & 15.27\% & 0.788 & 0.898 & 20.76\% & 26.2\% & 22 \\
+RC-MoE & 2 & 20 & 14.91\% & 0.762 & 0.871 & 21.08\% & 26.2\% & 22 \\
+\bottomrule
+\end{tabular}}
+\tabnote{Signal for day $t$ computed after the close of day $t$; with lag $k$ the portfolio is in cash for returns $r_{t+k},\ldots,r_{t+k+4}$. $k=0$ hedges the signal-day return $r_t$ itself and is not implementable; it is shown only for reference. $k=1$: trade at the close of day $t$, so $r_t$ is never hedged; $k=2$: trade at the close of day $t+1$. Cost charged per one-way switch between equity and cash. Sharpe: (annualised return $-$ 4\%) / annualised volatility. Hedged: share of days in cash.}
+\label{tab:exec_lag}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{final_figures/fig_execution_lag.png}
+\caption{(a) Cumulative returns and (b) drawdowns of buy-and-hold and of the RC-MoE overlay with an execution lag of one and two days (5~bp per switch) on dated out-of-sample S\&P~500 signals, 20 December 2018 to 29 December 2025. Shaded intervals are the days on which the lag-1 overlay holds cash.}
+\label{fig:execution_lag}
+\end{figure}
+
+
+\textbf{Execution timing.} Because the factor vector and the regime use information up to the close of day $t$ (Section~\ref{sec:problem_formulation}), a signal for day $t$ can be acted on only after that close. To verify that the economic benefit does not depend on reacting to the return that generated the signal, Table~\ref{tab:exec_lag} re-runs the overlay on the dated out-of-sample S\&P~500 signals of the purged walk-forward pipeline (Section~\ref{subsubsec:multimarket}; 20 December 2018 to 29 December 2025, 1{,}765 trading days) under an explicit day-by-day convention. The signal for day $t$ is computed after the close of day $t$; with implementation lag $k$ the portfolio is moved to cash for returns $r_{t+k},\ldots,r_{t+k+4}$, and a new signal during the holding period extends the hedge. With $k=1$ the position is changed at the close of day $t$, which assumes that the signal can be computed from near-close prices, and the return $r_t$ that generated the signal is never hedged; $k=2$ removes this assumption by trading at the close of day $t+1$. For reference, the table also reports $k=0$, which hedges the signal-day return itself and is therefore not implementable. Transaction costs are charged per one-way switch between equity and cash. With a one-day lag and no costs, the RC-MoE overlay earns 15.35\% a year with a Sharpe ratio of 0.794 and a maximum drawdown of 21.6\%, against 15.57\%, 0.577 and 33.9\% for buy-and-hold over the same period. Hedging from the signal day ($k=0$) would give a Sharpe ratio of 0.975 and a maximum drawdown of 16.8\%, so about half of the same-day Sharpe advantage over buy-and-hold survives the implementation lag. An additional day of delay leaves the result essentially unchanged (Sharpe 0.813), and a cost of 20~bp per switch lowers the Sharpe ratio only to 0.742, because the overlay switches 22 times over seven years. A circular block bootstrap (20-day blocks, 2{,}000 draws) at 5~bp per switch gives a Sharpe-ratio difference of $+0.20$ (95\% CI $[-0.45, 0.86]$) and a maximum-drawdown reduction of 12.2 percentage points (95\% CI $[-1.6, 34.4]$) relative to buy-and-hold\rev{ (Figure~\ref{fig:execution_lag})}. The point estimates therefore continue to favour the overlay under an explicit implementation lag and realistic costs, but the intervals are wide because the sample contains few stress episodes; this is consistent with interpreting the overlay as a risk-reduction tool rather than a source of statistically significant excess performance. The overlay in this table is in cash on 26.2\% of days because it uses the 95th-percentile labels of the walk-forward pipeline, so its levels are not directly comparable with those in Table~\ref{tab:backtest}. Table~\ref{tab:backtest} is retained as the comparison across detectors on the full 2016--2025 sample; because its convention does not separate the signal day from the execution day, conclusions about implementable economic value are based on Table~\ref{tab:exec_lag}.
 
 Warning concerning period dependency. The years between 2016 and 2025 represent an excellent time horizon for hedging due to the presence of the 2020 COVID crash. Within the 2022-2025 bull market phase (defined by the Fed rate hike regime and a prolonged uptrend), it is shown that a factor model of Fama-French reveals that the regime-based hedging strategy yields lower absolute returns compared to the naive strategy (10.4\% vs.\ 16.9\% per year), lowers the beta against the S\&P500 from 1.0 to 0.63 (statistically significant at $p < 0.001$), but does not exhibit statistically significant positive alpha ($p = 0.31$). This should be interpreted as evidence of effective risk reduction rather than ineffective hedging. The full two period analysis is included along with the Fama French factor exposure test in Section \ref{subsec:factor_exposure}.
 
@@ -1132,7 +1248,7 @@ Figure~\ref{fig:cumret} shows the path taken by the cumulative returns over the 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.85\textwidth]{final_figures/fig2_cumulative_returns.png}
-  \caption{Cumulative returns of the RC-MoE regime-aware overlay, buy-and-hold, and GARCH-based hedging over the 2022--2025 period.}
+  \caption{Cumulative returns of the regime-aware RC-MoE overlay, the binary anomaly-hedged overlay, buy-and-hold and a GARCH(1,1) $2\sigma$ hedge, May 2022--December 2025 (S\&P~500); the lower panel shows returns relative to buy-and-hold.}
   \label{fig:cumret}
 \end{figure*}
 
@@ -1150,15 +1266,14 @@ To connect the two dimensions discussed, we define the metric \emph{hedging effi
 
 \noindent Where $\Delta_{\mathrm{MDD}}$ is measured in percentage points (pp) and $D$ is the number of total detections.
 
-\begin{figure}[H]
+As shown in Figure~\ref{fig:hedging_efficiency}, the LightGBM RC-MoE model attains $\eta = 0.315$~pp/det, which is 85\% higher than the $\eta = 0.170$~pp/det of the GARCH(1,1) model. Hence a risk manager using RC-MoE obtains similar portfolio hedging with $2.5\times$ fewer detection signals (42 versus 107 alerts; 6.2\% versus 19.6\% of days hedged), reducing transaction costs and decision fatigue.
+
+\begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{final_figures/hedging_efficiency_chart.png}
-    \caption{The MoE LightGBM provides high protection from drawdowns using relatively few detection signals, while having a better risk-adjusted performance.}
+    \caption{Hedging efficiency $\eta$ (maximum-drawdown reduction per detection, pp per detection; Eq.~\eqref{eq:hedge_eff}) of each strategy (S\&P~500).}
     \label{fig:hedging_efficiency}
 \end{figure}
-
-As shown in Figure~\ref{fig:hedging_efficiency}, the LightGBM RC-MoE model attains $\eta = 0.315$~pp/det, which is 85\% higher than the $\eta = 0.170$~pp/det of the GARCH(1,1) model. Hence, if the risk manager uses RC-MoE, he will be able to obtain similar portfolio hedging with $2.5\times$ fewer detection signals, reducing transaction costs and decision fatigue.
-
 % ----------------------------------------------------------------
 \subsection{Factor Exposure Analysis and Period Robustness}
 \label{subsec:factor_exposure}
@@ -1172,14 +1287,14 @@ In order to formally assess whether the regime-aware hedge overlay creates value
 \end{split}
 \label{eq:ff6}
 \end{equation}
-calculated based on a dataset of $N=910$ matched daily observations (from 2022-05-13 until 2025-12-29) with Newey-West HAC standard errors and 5 lags. The factor data are from the Kenneth French data library.
+calculated based on a dataset of $N=910$ matched daily observations (from 2022-05-13 until 2025-12-29) with Newey-West HAC standard errors and 5 lags. The overlay is the regime-scaled variant of the strategy, which moves 40\%, 70\% and 100\% of the portfolio to cash after a signal in the low-, medium- and high-volatility regimes respectively. Its signals are the out-of-sample LightGBM RC-MoE detections on the 2021--2025 window sample, for which anomalous windows are defined by window volatility above its expanding 97th percentile, and they are executed with a one-day lag (the first hedged return is $r_{t+1}$). The hedge fraction uses a 20-day volatility regime that includes the hedged day; sizing it instead with the previous day's regime (information up to $t-1$ only) gives $\hat{\beta}_{\text{Mkt}}=0.662$ and an annualised alpha of $-4.3\%$ ($p=0.20$), so the conclusions below are unchanged. The factor data are from the Kenneth French data library.
 
-The full results are displayed in Table~\ref{tab:ff_alpha}. The market beta $\hat{\beta}_{\text{Mkt}}=0.630$ ($p < 0.001$) suggests that 63\% of market risk is maintained, thus lowering exposure by 37\% relative to a fully invested strategy ($\beta = 1.0$). The three out of six factors that are statistically significant are MktRF, a market exposure; HML ($p=0.040$, slight value bias), and MOM ($p=0.017$, positive momentum exposure implying sales of stocks post anomaly events induced by momentum factors). The constant (alpha) is $-3.74\%$ annually and is not statistically significant ($t=-1.02$, $p=0.31$), confirming that the strategy does not earn any additional returns beyond factor exposure. The factor model is able to explain $68.7\%$ of the variance of returns on the strategy overlay ($\mathrm{Adj.}\ R^2=0.687$), proving that the returns from the overlay are explained by standard risk premia and not through anomaly detection.
+The full results are displayed in Table~\ref{tab:ff_alpha}. The market beta $\hat{\beta}_{\text{Mkt}}=0.630$ ($p < 0.001$) suggests that 63\% of market risk is maintained, thus lowering exposure by 37\% relative to a fully invested strategy ($\beta = 1.0$). The three out of six factors that are statistically significant are MktRF, a market exposure; HML ($p=0.040$, slight value bias), and MOM ($p=0.017$, positive momentum exposure implying sales of stocks post anomaly events induced by momentum factors). The constant (alpha) is $-3.74\%$ annually and is not statistically significant ($t=-1.02$, $p=0.31$), confirming that the strategy does not earn any additional returns beyond factor exposure. The factor model is able to explain $68.7\%$ of the variance of returns on the strategy overlay ($\mathrm{Adj.}\ R^2=0.687$), indicating that the returns from the overlay are explained by standard risk premia and not through anomaly detection.
 
 \begin{table}[H]
 \tbl{Fama-French FF5+MOM regression, regime-aware hedge (2022--2025)}
 {\renewcommand{\arraystretch}{1.25}
-\setlength{\tabcolsep}{5pt}
+\setlength{\tabcolsep}{8pt}
 \begin{tabular}{lrr}
 \toprule
 \textbf{Factor} & \textbf{Estimate} & \textbf{$p$-value} \\
@@ -1225,7 +1340,7 @@ Table~\ref{tab:period_comparison} reports backtest performance across two evalua
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.92\textwidth]{final_figures/fig_factor_beta.png}
-  \caption{Factor-exposure analysis of the RC-MoE overlay. (a) Reduced market beta indicates lower systematic risk exposure. (b) Rolling beta compression during stress periods demonstrates effective regime-aware risk management.}
+  \caption{Factor exposure of the regime-aware overlay, 2022--2025: (a) FF5+MOM factor loadings; (b) rolling market beta.}
   \label{fig:factor_beta}
 \end{figure*}
 
@@ -1234,7 +1349,7 @@ Table~\ref{tab:period_comparison} reports backtest performance across two evalua
 \label{subsec:var}
 % ----------------------------------------------------------------
 
-Table~\ref{tab:var} demonstrates that unconditional tail-risk estimates systematically misrepresent capital requirements. All VaR and CVaR figures are computed directly from actual daily S\&P 500 returns partitioned by rolling 60-day realised volatility regimes~\citep{jorion2007value}; all values represent 1-day losses and are reported as negative numbers (e.g., $-1.67\%$ denotes a 1.67\% loss). CVaR (Expected Shortfall) is employed as a coherent risk measure~\citep{artzner1999coherent, rockafellar2000cvar} satisfying the properties of monotonicity, sub-additivity, homogeneity, and translational invariance.
+Table~\ref{tab:var} demonstrates that unconditional tail-risk estimates systematically misrepresent capital requirements. All VaR and CVaR figures are computed directly from actual daily S\&P 500 returns partitioned by rolling 60-day realised volatility regimes~\citep{jorion2007value}. These regimes use 60-day realised volatility of daily returns rather than the 128-day window of the detector, because the risk analysis operates on daily returns. All values represent 1-day losses and are reported as negative numbers (e.g., $-1.67\%$ denotes a 1.67\% loss). CVaR (Expected Shortfall) is employed as a coherent risk measure~\citep{artzner1999coherent, rockafellar2000cvar} satisfying the properties of monotonicity, sub-additivity, homogeneity, and translational invariance.
 
 \begin{table}[H]
 \tbl{Regime-conditional VaR and CVaR (S\&P 500, 2016--2025)}
@@ -1257,7 +1372,7 @@ High Vol & $-2.51\%$ & $-3.92\%$ & $-4.41\%$ & $-6.47\%$ &   910 \\
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.85\textwidth]{final_figures/fig_evt_tail.png}
-  \caption{EVT tail modeling across volatility regimes. Fitted GPD survival functions show increasing tail heaviness ($\hat{\xi}$) and higher $\text{EVT-VaR}_{99}$ from low- to high-volatility markets.}
+  \caption{Generalised Pareto survival functions fitted to losses above the 90th percentile in each volatility regime (S\&P~500, 2016--2025), with the estimated shape $\hat{\xi}$ and EVT-VaR$_{99}$.}
   \label{fig:evt_tail}
 \end{figure*}
 
@@ -1270,8 +1385,7 @@ whether an unconditional risk model is correctly calibrated within each
 regime. To address both, we fit a Generalized Pareto Distribution (GPD) to
 the peaks-over-threshold (POT) of the loss series ($-r_t$) within each
 regime~\citep{mcneil2000estimation}, using the $90$th loss percentile as the threshold $u$, and then backtest the resulting Value-at-Risk with the Kupiec proportion-of-failures
-(POF) test~\citep{kupiec1995techniques} and the Christoffersen conditional-coverage
-test~\citep{mcneil2015quantitative}.
+(POF) test~\citep{kupiec1995techniques} and the Christoffersen independence and conditional-coverage tests~\citep{christoffersen1998evaluating, mcneil2015quantitative}.
 
 \begin{table}[H]
 \tbl{EVT tail fit by regime (GPD peaks-over-threshold, S\&P 500, 2016--2025)}
@@ -1298,10 +1412,54 @@ unconditional $\text{VaR}_{99}$ \emph{passes} the Kupiec test on the full sample
 ($p=0.86$), yet when that same unconditional threshold is applied
 \emph{within} the high-volatility regime it is rejected
 (Kupiec $p<0.001$; realised violation rate $2.6\%$ versus the nominal
-$1.0\%$). The regime-conditional VaR, by construction, restores correct
-coverage. This reframes the contribution: the issue is not merely that
+$1.0\%$). The regime-conditional EVT-VaR restores correct unconditional coverage; the full coverage evidence is reported in Table~\ref{tab:coverage}. This reframes the contribution: the issue is not merely that
 regime tails differ in magnitude, but that an unconditional risk model is
 \emph{statistically mis-calibrated in the high-volatility regime}.
+
+\begin{table}[H]
+\tbl{VaR$_{99}$ coverage backtests by market and volatility regime: unconditional empirical VaR$_{99}$ (Uncond.) vs.\ regime-conditional EVT-VaR$_{99}$ (Cond.), daily returns 2016--2025}
+{\scriptsize
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{llrrrrrrrrrr}
+\toprule
+ & & & & \multicolumn{4}{c}{\textbf{Uncond.\ VaR$_{99}$}} & \multicolumn{4}{c}{\textbf{Cond.\ EVT-VaR$_{99}$}} \\
+\cmidrule(lr){5-8}\cmidrule(lr){9-12}
+\textbf{Market} & \textbf{Regime} & $N$ & $E[V]$ & $V$ & $p_{uc}$ & $p_{ind}$ & $p_{cc}$ & $V$ & $p_{uc}$ & $p_{ind}$ & $p_{cc}$ \\
+\midrule
+S\&P 500 & All & 2514 & 25.1 & 26 & 0.864 & 0.028 & 0.089 & 27 & 0.713 & $<$0.001 & $<$0.001 \\
+ & Low & 830 & 8.3 & 0 & $<$0.001 & 1.000 & $<$0.001 & 9 & 0.810 & 0.081 & 0.213 \\
+ & Med & 829 & 8.3 & 4 & 0.096 & 0.844 & 0.245 & 10 & 0.563 & 0.105 & 0.227 \\
+ & High & 855 & 8.6 & 22 & $<$0.001 & 0.123 & $<$0.001 & 8 & 0.848 & 0.001 & 0.006 \\
+\midrule
+NASDAQ & All & 2513 & 25.1 & 26 & 0.862 & 0.028 & 0.089 & 24 & 0.819 & 0.228 & 0.471 \\
+ & Low & 829 & 8.3 & 1 & 0.001 & 0.961 & 0.005 & 8 & 0.919 & 0.693 & 0.920 \\
+ & Med & 829 & 8.3 & 3 & 0.034 & 0.883 & 0.103 & 10 & 0.563 & 0.621 & 0.749 \\
+ & High & 855 & 8.6 & 22 & $<$0.001 & 0.017 & $<$0.001 & 6 & 0.354 & 0.029 & 0.061 \\
+\midrule
+Russell 2000 & All & 2513 & 25.1 & 26 & 0.862 & 0.002 & 0.008 & 28 & 0.572 & $<$0.001 & $<$0.001 \\
+ & Low & 829 & 8.3 & 2 & 0.008 & 0.922 & 0.031 & 12 & 0.225 & 0.161 & 0.179 \\
+ & Med & 829 & 8.3 & 1 & 0.001 & 0.961 & 0.005 & 8 & 0.919 & 0.061 & 0.173 \\
+ & High & 855 & 8.6 & 23 & $<$0.001 & 0.022 & $<$0.001 & 8 & 0.848 & 0.059 & 0.166 \\
+\midrule
+Bitcoin & All & 3652 & 36.5 & 37 & 0.937 & 0.058 & 0.165 & 36 & 0.931 & 0.052 & 0.150 \\
+ & Low & 1205 & 12.1 & 2 & $<$0.001 & 0.935 & 0.001 & 10 & 0.541 & 0.682 & 0.763 \\
+ & Med & 1205 & 12.1 & 12 & 0.988 & 0.105 & 0.270 & 14 & 0.582 & 0.151 & 0.307 \\
+ & High & 1242 & 12.4 & 23 & 0.007 & 0.351 & 0.017 & 12 & 0.904 & 0.628 & 0.883 \\
+\bottomrule
+\end{tabular}}
+\tabnote{$N$: days; $E[V]$: expected violations ($1\%$ of $N$); $V$: observed violations; $p_{uc}$: Kupiec unconditional coverage; $p_{ind}$: Christoffersen independence; $p_{cc}$: Christoffersen conditional coverage. Regimes are terciles of 60-day realised volatility; ``All'' uses the full timeline. $p<0.05$ indicates rejection of correct coverage.}
+\label{tab:coverage}
+\end{table}
+
+Table~\ref{tab:coverage} reports, for every market and regime, the number of violations and the Kupiec unconditional-coverage, Christoffersen independence and joint conditional-coverage tests~\citep{kupiec1995techniques, christoffersen1998evaluating}. \rev{Figure~\ref{fig:var_coverage} shows the violation counts.} The unconditional $\text{VaR}_{99}$ fails both the Kupiec and the conditional-coverage test in the high-volatility regime of all four markets ($p_{uc} \le 0.007$, $p_{cc} \le 0.017$) and is overly conservative in the low-volatility regime, where it records 0--2 violations against 8--12 expected ($p_{uc} \le 0.008$). The regime-conditional EVT-VaR passes the Kupiec test in every regime of every market ($p_{uc} \ge 0.22$) and the conditional-coverage test in 11 of the 12 regime--market cells; the exception is the S\&P~500 high-volatility regime, where violations remain clustered ($p_{ind} = 0.001$). Over the full timeline some clustering also remains for the S\&P~500 and the Russell~2000. Regime conditioning therefore corrects the level of the VaR within each regime but does not remove all within-regime volatility dynamics.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{final_figures/fig_var_coverage.png}
+\caption{VaR$_{99}$ violations by volatility regime for the unconditional empirical VaR$_{99}$ and the regime-conditional EVT-VaR$_{99}$ in four markets (daily returns, 2016--2025). Dashed lines show the expected number of violations (1\% of days); crosses mark cells where the Christoffersen conditional-coverage test rejects correct coverage ($p_{cc}<0.05$). Regimes are terciles of 60-day realised volatility.}
+\label{fig:var_coverage}
+\end{figure}
 
 % ---- Basel III capital ----
 \subsubsection{Basel III Capital Adequacy Implications}
@@ -1310,7 +1468,7 @@ regime tails differ in magnitude, but that an unconditional risk model is
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{final_figures/fig_basel_capital.png}
-  \caption{Basel III capital charges under unconditional and regime-conditional VaR. Unconditional VaR misprices risk across volatility regimes, over-reserving in calm markets and under-reserving during stress.}
+  \caption{Basel~III 10-day capital charge ($k=3$) under unconditional and regime-conditional VaR$_{99}$ by volatility regime (S\&P~500, 2016--2025), with the over- or under-reservation of the unconditional model.}
   \label{fig:basel_capital}
 \end{figure}
 
@@ -1368,32 +1526,33 @@ calm regimes ($+27\%$ to $+93\%$) and under-reservation in stressed regimes
 generalises across equity indices and a structurally different crypto-asset, as shown in Fig.~\ref{fig:multimarket}.
 
 \begin{table}[H]
-\tbl{Multi-market EVT and Basel replication (daily returns, 2016--2025)}
+\tbl{Multi-market EVT and Basel replication (daily returns, 2016--2025). Test statistics in Table~\ref{tab:coverage}.}
 {\footnotesize
 \renewcommand{\arraystretch}{1.25}
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Market} & \textbf{$\hat{\xi}_{\text{Hi}}$} & \textbf{$\text{EVT-VaR}_{99}$} & \textbf{Hi-Vol} & \textbf{Basel} & \textbf{Basel} \\
- & & \textbf{Lo$\rightarrow$Hi} & \textbf{Kupiec} & \textbf{Lo} & \textbf{Hi} \\
+ & & \textbf{Lo$\rightarrow$Hi} & \textbf{Kupiec / CC} & \textbf{Lo} & \textbf{Hi} \\
 \midrule
-S\&P 500     & $+0.216$ & $1.8\%\!\rightarrow\!4.7\%$  & FAIL & $+91\%$ & $-24\%$ \\
-NASDAQ       & $+0.143$ & $2.5\%\!\rightarrow\!5.4\%$  & FAIL & $+77\%$ & $-19\%$ \\
-Russell 2000 & $+0.253$ & $2.6\%\!\rightarrow\!5.8\%$  & FAIL & $+27\%$ & $-23\%$ \\
-Bitcoin      & $+0.221$ & $5.8\%\!\rightarrow\!12.8\%$ & FAIL & $+93\%$ & $-14\%$ \\
+S\&P 500     & $+0.216$ & $1.8\%\!\rightarrow\!4.7\%$  & FAIL / FAIL & $+91\%$ & $-24\%$ \\
+NASDAQ       & $+0.143$ & $2.5\%\!\rightarrow\!5.4\%$  & FAIL / FAIL & $+77\%$ & $-19\%$ \\
+Russell 2000 & $+0.253$ & $2.6\%\!\rightarrow\!5.8\%$  & FAIL / FAIL & $+27\%$ & $-23\%$ \\
+Bitcoin      & $+0.221$ & $5.8\%\!\rightarrow\!12.8\%$ & FAIL / FAIL & $+93\%$ & $-14\%$ \\
 \bottomrule
 \end{tabular}}
+\tabnote{$\hat{\xi}_{\text{Hi}}$: GPD shape in the high-volatility regime. Basel Lo/Hi: reservation gap of the unconditional VaR$_{99}$ in the low/high-volatility regime (positive = over-reserved).}
 \label{tab:multimarket}
 \end{table}
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.92\textwidth]{final_figures/fig_multimarket.png}
-  \caption{Multi-market validation of the EVT/Basel findings. (a) $\text{EVT-VaR}_{99}$ rises with market volatility across all assets. (b) Unconditional VaR produces systematic capital mis-calibration across volatility regimes.}
+  \caption{(a) EVT-VaR$_{99}$ by volatility regime and (b) Basel~III reservation gap of the unconditional VaR$_{99}$ for the S\&P~500, NASDAQ, Russell~2000 and Bitcoin (2016--2025).}
   \label{fig:multimarket}
 \end{figure*}
 
-Multi-market detection: event-wise comparison. To test whether regime conditioning generalises beyond the S\&P~500, we re-run the \emph{full} RC-MoE detection pipeline on all four markets under a leakage-free 5-fold walk-forward protocol with a $128$-day purge gap. The pipeline uses the same feature engineering as the main model (eight economic factors with lag-1 and lag-5 augmentations, giving a $24$-dimensional representation), an RF$+$XGBoost$+$LightGBM probability ensemble, and event-wise F1 with a $\pm5$-window tolerance. Anomalies are labelled at the $95$th return-percentile, matching the $\text{VaR}_{95}$ tail definition of Section~\ref{subsubsec:evt}, which fixes the threshold reproducibly. Table~\ref{tab:multimarket_detection} reports the outcome. On the headline event-wise F1 metric, the same measure used for the S\&P~500 model, the RC-MoE \emph{outperforms} the global ensemble on the S\&P~500 ($+0.071$), Russell~2000 ($+0.092$), and on the pooled cross-market sample ($+0.012$); it is statistically tied on the NASDAQ ($-0.005$). Bitcoin is an explicit negative case that delineates the model's applicability boundary: the continuous $24/7$ microstructure, the absence of a daily settlement close, and the structurally higher and more persistent volatility all violate the daily volatility-tercile regime assumption, producing a substantial F1 degradation ($-0.113$). Bitcoin should therefore be interpreted as a falsifiability test rather than a replication case: the RC-MoE regime framework is designed for exchange-closed, daily-settlement markets and requires fundamental redesign of the gating mechanism before it can be applied to continuous-trading crypto assets. The equity replication, however, is robust. The improvement on equity indices is recall-driven: regime-specific thresholds widen the detection net, raising event recall (S\&P $0.111\!\rightarrow\!0.161$; Russell $0.122\!\rightarrow\!0.184$) at modest precision cost. McNemar testing confirms a statistically distinct error profile in \emph{every} market ($\chi^2$ between $148.8$ and $212.7$; all $p<10^{-30}$) and on the pooled sample ($\chi^2=708.2$, $p<10^{-150}$, $435$ events), replicating the S\&P-500 finding of Section~\ref{subsec:regime_impact} at greater statistical power.
+Multi-market detection: event-wise comparison. To test whether regime conditioning generalises beyond the S\&P~500, we re-run the \emph{full} RC-MoE detection pipeline on all four markets under a leakage-free 5-fold walk-forward protocol with a $128$-day purge gap. The pipeline uses the same feature engineering as the main model (eight economic factors with lag-1 and lag-5 augmentations, giving a $24$-dimensional representation), an RF$+$XGBoost$+$LightGBM probability ensemble, and event-wise F1 with a $\pm5$-window tolerance. Anomalies are labelled at the $95$th return-percentile, matching the $\text{VaR}_{95}$ tail definition of Section~\ref{subsubsec:evt}, which fixes the threshold reproducibly. Table~\ref{tab:multimarket_detection} reports the outcome. On the headline event-wise F1 metric, the same measure used for the S\&P~500 model, the RC-MoE \emph{outperforms} the global ensemble on the S\&P~500 ($+0.071$), Russell~2000 ($+0.092$), and on the pooled cross-market sample ($+0.012$); it is statistically tied on the NASDAQ ($-0.005$). Bitcoin is an explicit negative case that delineates the model's applicability boundary: the continuous $24/7$ microstructure, the absence of a daily settlement close, and the structurally higher and more persistent volatility all violate the daily volatility-tercile regime assumption, producing a substantial F1 degradation ($-0.113$). Bitcoin should therefore be interpreted as a falsifiability test rather than a replication case: the RC-MoE regime framework is designed for exchange-closed, daily-settlement markets and requires fundamental redesign of the gating mechanism before it can be applied to continuous-trading crypto assets. The gain holds for the S\&P~500 and the Russell~2000 but not for the NASDAQ. The improvement on equity indices is recall-driven: regime-specific thresholds widen the detection net, raising event recall (S\&P $0.111\!\rightarrow\!0.161$; Russell $0.122\!\rightarrow\!0.184$) at modest precision cost. McNemar testing confirms a statistically distinct error profile in \emph{every} market ($\chi^2$ between $148.8$ and $212.7$; all $p<10^{-30}$) and on the pooled sample ($\chi^2=708.2$, $p<10^{-150}$, $435$ events), replicating the S\&P-500 finding of Section~\ref{subsec:regime_impact} at greater statistical power.
 
 \begin{table}[H]
 \tbl{Multi-market event-wise detection: global vs. RC-MoE (5-fold CV, 2016--2025)}
@@ -1412,6 +1571,7 @@ Bitcoin      &  80 & \textbf{0.232} & 0.119 & $-0.113$ & 148.8 \\
 \textbf{Pooled} & \textbf{435} & 0.195 & \textbf{0.207} & $+0.012$ & 708.2 \\
 \bottomrule
 \end{tabular}}
+\tabnote{EW-F1: event-wise F1 with $\pm5$-window tolerance; $\Delta$F1 = RC-MoE $-$ Global; McNemar $\chi^2$ compares the two detectors' errors (all $p<10^{-30}$).}
 \label{tab:multimarket_detection}
 \end{table}
 
@@ -1424,14 +1584,14 @@ across equities and Bitcoin alike.
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.98\textwidth]{final_figures/fig7_multimarket_distributions.png}
-  \caption{Multi-market regime structure across the S\&P 500, NASDAQ, Russell 2000, and Bitcoin. Volatility regimes exhibit clear separation in feature space, while return distributions broaden systematically from low- to high-volatility states across all markets.}
+  \caption{Factor-space embeddings coloured by volatility regime and per-regime return densities for the S\&P~500, NASDAQ, Russell~2000 and Bitcoin (2016--2025).}
   \label{fig:mm_distributions}
 \end{figure*}
 
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=0.85\textwidth]{final_figures/var_boundaries_chart.png}
-    \caption{Dynamic 99\% Value-at-Risk (VaR) boundaries and regime-conditional $\text{EVT-VaR}_{99}$ levels. VaR violations cluster during high-volatility periods, reflecting the time-varying nature of tail risk.}
+    \caption{Daily S\&P~500 returns with dynamic and regime-conditional EVT VaR$_{99}$ boundaries (2016--2025); markers show VaR violations.}
     \label{fig:var_regime}
 \end{figure*}
 
@@ -1452,36 +1612,37 @@ The Explainability Consistency Index (ECI) quantifies \emph{cross-model} agreeme
 
 \noindent where $d_{\tau}$ is the normalised Kendall tau distance~\citep{kendall1938measure} between feature-importance ranking vectors $\pi_i$ and $\pi_j$ from models $i$ and $j$, and $K = 3$. An ECI of 1 denotes perfect agreement; 0 denotes maximum disagreement.
 
-The ECI is distinct from existing explanation stability measures in two ways. First, it operates \emph{across independently trained model families} (RF, XGBoost, LightGBM) rather than across repeated runs of the same model or across explanation methods for a single model; cross-model agreement is a structurally stronger claim because model-family diversity is much higher than seed or method diversity. Second, it is evaluated \emph{per volatility regime}, enabling a formal test of whether anomaly drivers vary structurally across market states, a question that global consistency measures cannot address because they aggregate across regimes. For reference, cross-method ECI (comparing SHAP versus tree importances within a single model) yields ECI $\approx 0.85$--$0.88$ across all regimes, confirming that the lower cross-model values (0.646--0.789) reflect genuine disagreement between expert families rather than explanation method noise.
+The ECI is distinct from existing explanation stability measures in two ways. First, it operates \emph{across independently trained model families} (RF, XGBoost, LightGBM) rather than across repeated runs of the same model or across explanation methods for a single model; cross-model agreement is a structurally stronger claim because model-family diversity is much higher than seed or method diversity. Second, it is evaluated \emph{per volatility regime}, enabling a comparison of anomaly drivers across market states, a question that global consistency measures cannot address because they aggregate across regimes. For reference, cross-method ECI (comparing SHAP versus tree importances within a single model) yields ECI $\approx 0.85$--$0.88$ across all regimes, indicating that the lower cross-model values (0.646--0.789) mainly reflect disagreement between expert families rather than explanation-method noise.
 
-Statistical validation. A random-ranking null model (2{,}000 permutations of all three importance vectors) yields $\mathrm{ECI}_\text{null} \approx 0.500$ [0.42, 0.59] for all regime sizes, providing a natural baseline for random consensus. All observed regime ECIs exceed this null by $z = 3.5$--$7.1$ standard deviations ($p \leq 0.001$). Bootstrap 95\% confidence intervals (2{,}000 feature-bootstrap replicates) are reported in Table~\ref{tab:eci_regimes}. Pairwise Wilcoxon signed-rank tests on bootstrap ECI distributions confirm that all three regimes differ significantly in their explanatory consensus (Low vs.\ Med: $p<0.001$; Low vs.\ High: $p<0.001$; Med vs.\ High: $p<0.001$).
+Statistical validation. A random-ranking null model (2{,}000 permutations of all three importance vectors) yields $\mathrm{ECI}_\text{null} \approx 0.500$ [0.42, 0.59] for all regime sizes, providing a natural baseline for random consensus. All observed regime ECIs exceed this null by $z = 3.5$--$7.1$ standard deviations ($p \leq 0.001$). Bootstrap 95\% confidence intervals (2{,}000 feature-bootstrap replicates) are reported in Table~\ref{tab:eci_regimes}. We do not report significance tests between regimes: the bootstrap replicates are not independent observations, the regime samples contain only 10, 5 and 6 anomalies (Low, Med, High), and the medium- and high-volatility intervals overlap substantially. Differences between regime ECIs are therefore interpreted descriptively.
+
 
 \begin{table}[H]
 \tbl{Explainability Consistency Index (ECI) per volatility regime with bootstrap}
 {\renewcommand{\arraystretch}{1.25}
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-\textbf{Scope} & \textbf{ECI} & \textbf{Bootstrap 95\% CI} & \textbf{$z$-score} \\
+\textbf{Scope} & \textbf{ECI} & \textbf{Bootstrap 95\% CI} & \textbf{$z$-score} & \textbf{Anomalies} \\
 \midrule
-Global (all regimes) & 0.768 & [0.685,\ 0.841] & 6.71 \\
+Global (all regimes) & 0.768 & [0.685,\ 0.841] & 6.71 & 21 \\
 \midrule
-Low Volatility       & 0.646 & [0.536,\ 0.755] & 3.49 \\
-Medium Volatility    & 0.763 & [0.694,\ 0.826] & 6.29 \\
-High Volatility      & 0.789 & [0.702,\ 0.863] & 7.13 \\
+Low Volatility       & 0.646 & [0.536,\ 0.755] & 3.49 & 10 \\
+Medium Volatility    & 0.763 & [0.694,\ 0.826] & 6.29 & 5 \\
+High Volatility      & 0.789 & [0.702,\ 0.863] & 7.13 & 6 \\
 \bottomrule
 \end{tabular}}
+\tabnote{ECI: mean normalised Kendall-$\tau$ agreement of RF, XGBoost and LightGBM feature rankings; $z$-score relative to a random-ranking null (mean 0.50).}
 \label{tab:eci_regimes}
 \end{table}
+The global ECI of 0.768 [0.685, 0.841], as shown in Fig.~\ref{fig:eci_regimes}, indicates strong cross-model agreement on anomaly drivers, substantially above the null baseline of 0.500 ($z=6.71$). 
 
-The global ECI of 0.768 [0.685, 0.841], as shown in Fig.~\ref{fig:eci_regimes}, indicates strong cross-model agreement on anomaly drivers, substantially above the null baseline of 0.500 ($z=6.71$). All three model families independently identify composite volatility and GARCH-based features as top-2 drivers, consistent with the ARCH literature~\citep{bollerslev1986a} and the established role of volatility-of-volatility in tail risk~\citep{bouchaud2001more}.
-
-Per-regime ECI follows a clear pattern (Table~\ref{tab:eci_regimes}). The Low-Vol regime shows the lowest agreement (ECI $= 0.646$ [0.536, 0.755]), reflecting the sparse and heterogeneous character of anomalies in calm markets ($n = 10$ anomalies, $z = 3.49$ above null). The Med-Vol regime reaches ECI $= 0.763$ [0.694, 0.826] ($z = 6.29$) and the High-Vol regime reaches the highest agreement at ECI $= 0.789$ [0.702, 0.863] ($z = 7.13$), consistent with the more canonical tail-event signatures in volatile markets. Pairwise Wilcoxon tests confirm the regimes are statistically distinguishable in their explanatory consensus (all $p < 0.001$). The monotonically increasing ECI from Low- to High-Vol ($0.646 \rightarrow 0.763 \rightarrow 0.789$) mirrors the Basel III capital finding: regime structure becomes more coherent and economically interpretable precisely at the elevated-volatility states where regulatory risk is greatest. This regime-dependent nature of explanatory consensus is inaccessible to global models and represents a structural empirical finding of this study.
+Per-regime ECI follows a clear pattern (Table~\ref{tab:eci_regimes}). The Low-Vol regime shows the lowest agreement (ECI $= 0.646$ [0.536, 0.755]), reflecting the sparse and heterogeneous character of anomalies in calm markets ($n = 10$ anomalies, $z = 3.49$ above null). The Med-Vol regime reaches ECI $= 0.763$ [0.694, 0.826] ($z = 6.29$) and the High-Vol regime reaches the highest agreement at ECI $= 0.789$ [0.702, 0.863] ($z = 7.13$), consistent with the more canonical tail-event signatures in volatile markets. The increase in ECI from Low- to High-Vol ($0.646 \rightarrow 0.763 \rightarrow 0.789$) is consistent with the Basel III capital finding: regime structure becomes more coherent and economically interpretable precisely at the elevated-volatility states where regulatory risk is greatest. This regime-dependent nature of explanatory consensus is inaccessible to global models and is a descriptive finding of this study that should be confirmed on larger samples.
 
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.6\textwidth]{final_figures/eci_chart.png}
-    \caption{Explainability Consistency Index (ECI) across volatility regimes. Feature-attribution consistency varies systematically with market volatility.}
+    \caption{Explainability Consistency Index (ECI) by volatility regime with bootstrap 95\% confidence intervals (10, 5 and 6 anomalies in the low-, medium- and high-volatility regimes).}
     \label{fig:eci_regimes}
 \end{figure*}
 
@@ -1495,7 +1656,7 @@ The SHAP values are computed individually for all expert ensembles of each regim
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=0.6\textwidth]{final_figures/explainability_attribution.png}
-    \caption{Regime-conditioned SHAP feature attribution: liquidity stress dominates the low-volatility regime, return-trend drift the medium-volatility regime, and momentum collapse the high-volatility regime.}
+    \caption{Mean absolute SHAP value of each factor by volatility regime, aggregated over the regime's expert ensemble (in-sample).}
     \label{fig:shap_regime}
 \end{figure*}
 
@@ -1523,7 +1684,7 @@ The dominant factors for each regime are consistent with established financial t
 No single global factor consistently explains financial anomalies across all market states: the anomaly driver itself is regime-dependent. This result directly motivates the RC-MoE architecture and is quantitatively supported by the ECI analysis in Section~\ref{subsec:eci}.
 
 \subsection{Interpretability vs.\ Deep Learning}
-The framework produces interpretable decision rules aligned with economic reasoning. A representative High-Vol expert rule reads: ``Anomaly if realized volatility is above Q$_{66}$ and momentum is less than 0.42.'' Such rules are directly actionable by risk managers, unlike the opaque boundaries of deep learning models.
+The framework produces interpretable decision rules aligned with economic reasoning. A representative High-Vol expert rule reads: ``Anomaly if realized volatility is above Q$_{66}$ and momentum is less than 0.42.'' Such rules can be inspected and audited by risk managers, unlike the opaque boundaries of deep learning models.
 
 The SHAP values above capture structural separation on in-sample data; they are not causal predictors of future crises. They identify each regime's structural signatures under the fixed regime definitions.
 
@@ -1537,13 +1698,33 @@ The SHAP values above capture structural separation on in-sample data; they are 
 \subsection{Structural Separability vs.\ Predictive Accuracy}
 \label{subsec:disc_separability}
 % ----------------------------------------------------------------
-The gap between in-sample structural separability and out-of-sample generalisation is theoretically expected rather than a modelling deficiency. Volatility-regime boundaries shift across structural breaks, and the factor co-movements driving one crisis episode differ from those of the next, preventing generalisation without re-calibration. Consistent with the non-stationarity literature~\citep{cont2001empirical}, the in-sample F1 is best interpreted as an upper bound on structural discriminability under fixed regime definitions. The economically relevant contribution is the precision-selective detection profile and the regulatory EVT finding, both evaluated under strict temporal protocols.
+The gap between in-sample structural separability and out-of-sample generalisation is theoretically expected rather than a modelling deficiency. Volatility-regime boundaries shift across structural breaks, and the factor co-movements driving one crisis episode differ from those of the next, preventing generalisation without re-calibration. Consistent with the non-stationarity literature~\citep{cont2001empirical}, the in-sample F1 is best interpreted as an upper bound on structural discriminability under fixed regime definitions. The economically relevant contribution is the precision-selective detection profile and the regulatory EVT finding, both evaluated under strict temporal protocols. Table~\ref{tab:evidence} maps each claim of the paper to its level of evidence.
+
+\begin{table}[H]
+\tbl{Claims of this paper and their level of evidence}
+{\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{L{0.24\textwidth} L{0.13\textwidth} L{0.38\textwidth} L{0.15\textwidth}}
+\toprule
+\textbf{Claim} & \textbf{Level} & \textbf{Evidence (protocol)} & \textbf{Strength} \\
+\midrule
+Anomaly structure is regime-dependent & Structural & In-sample F1 70.3\% (global RF) vs.\ 95.5\% (RC-MoE); Figs.~\ref{fig:topological_boundaries}--\ref{fig:regime_patterns} & Strong (in-sample upper bound) \\
+Unconditional VaR is mis-calibrated by regime & Structural & Kupiec and Christoffersen tests, four markets (Table~\ref{tab:coverage}) & Strong \\
+Out-of-sample detection gain & Predictive & Purged 5-fold CV: event-F1 $+0.071$ (S\&P~500), $+0.092$ (Russell~2000), $+0.012$ (pooled); bootstrap $p=0.28$ & Modest \\
+Economic value of the overlay & Predictive & Lagged backtest (Table~\ref{tab:exec_lag}): Sharpe difference $+0.20$, 95\% CI $[-0.45, 0.86]$; FF5+MOM $\beta=0.63$, $\alpha$ not significant & Risk reduction; not significant \\
+Explanations differ across regimes & Structural & ECI 0.646--0.789 with 5--10 anomalies per regime (Table~\ref{tab:eci_regimes}) & Descriptive \\
+\bottomrule
+\end{tabular}}
+\label{tab:evidence}
+\end{table}
+
+
 
 % ----------------------------------------------------------------
 \subsection{Role of Regime Conditioning}
 \label{subsec:disc_regime}
 % ----------------------------------------------------------------
-Global detectors assume a static relationship between return magnitude and anomaly probability—an assumption violated by volatility clustering. A single decision boundary is simultaneously too permissive in calm markets and too conservative during crises. Conditioning on the local variance process maps identical return magnitudes to different anomaly probabilities depending on the prevailing regime, correcting this structural failure without altering features or labels. The resulting precision-selective profile translates directly into economic value: fewer, more actionable alerts and substantially higher hedging efficiency per signal relative to global baselines.
+Global detectors assume a static relationship between return magnitude and anomaly probability, an assumption violated by volatility clustering. A single decision boundary is simultaneously too permissive in calm markets and too conservative during crises. Conditioning on the local variance process maps identical return magnitudes to different anomaly probabilities depending on the prevailing regime, correcting this structural failure without altering features or labels. In our data this is associated with a precision-selective profile, with fewer alerts and higher hedging efficiency per signal than the global baselines, although the out-of-sample F1 advantage is modest.
 
 % ----------------------------------------------------------------
 \subsection{Implications for Deep Learning in Finance}
@@ -1555,30 +1736,32 @@ The superior structural separability of a shallow RC-MoE over high-capacity deep
 \subsection{Risk Management Applications}
 \label{subsec:disc_risk}
 % ----------------------------------------------------------------
-The confirmed absence of significant alpha alongside a 37\% reduction in market beta positions the RC-MoE as a risk-reduction instrument rather than an alpha-generating strategy. Its economic value lies in tail-risk mitigation and capital calibration. The EVT/Basel~III results carry direct regulatory relevance: unconditional VaR models can pass aggregate Kupiec coverage tests while simultaneously failing in the high-volatility regime that matters most—a blind spot absent from current backtesting frameworks. Regime-conditional EVT provides a tractable correction requiring only volatility-regime stratification of VaR estimation, with no structural change to the Basel~III capital multiplier framework, and the result holds consistently across all four examined markets.
+The confirmed absence of significant alpha alongside a 37\% reduction in market beta positions the RC-MoE as a risk-reduction instrument rather than an alpha-generating strategy. Its economic value lies in tail-risk mitigation and capital calibration. The EVT/Basel~III results carry direct regulatory relevance: unconditional VaR models can pass aggregate Kupiec coverage tests while simultaneously failing in the high-volatility regime that matters most, a blind spot absent from current backtesting frameworks. Regime-conditional EVT provides a tractable correction requiring only volatility-regime stratification of VaR estimation, with no structural change to the Basel~III capital multiplier framework, and the result holds consistently across all four examined markets.
 
 % ===================== X. LIMITATIONS =====================
 \section{Limitations}
 \label{sec:limitations}
 
 \paragraph{Predictive generalisation}
-Performance metrics reported for in-sample structural separability do not generalize to out-of-sample predictive accuracy. The temporal validation experiments shows strong deterioration under walk-forward protocols, highlighting the difference between finding structural signatures in the past and predicting rare events in the future.
+Performance metrics reported for in-sample structural separability do not generalize to out-of-sample predictive accuracy. The temporal validation experiments show strong deterioration under walk-forward protocols, highlighting the difference between finding structural signatures in the past and predicting rare events in the future.
 
 \paragraph{Static regime definitions}
-Regime boundaries determined by fixed historical volatility quantiles assume structural stationarity over the entire estimation horizon. The 2020 COVID liquidity crisis displays that extreme macroeconomic dislocations distort static boundaries, suggesting the exploration of adaptive, rolling-quantile regime definitions.
+Regime boundaries are estimated from historical volatility quantiles (a 252-day rolling window for Detector~1 and training-fold quantiles for Detector~3), which assumes that the volatility distribution is stable within these windows. The 2020 COVID-19 liquidity crisis shows that extreme dislocations can move volatility outside the calibrated range, which motivates online-updated regime models in future work.
+\paragraph{Number of regimes}
+The choice of three regimes is motivated by the financial literature and by interpretability rather than selected from the data. With the full expert, a two-regime model reaches a higher out-of-sample F1 at the reference window ($L=128$), and HMM information criteria favour more than three states (Section~\ref{subsec:sensitivity}); the regime-level results should be read with this in mind.
 
 \paragraph{Sample sparsity and statistical power}
-The inherent rarity of extreme financial anomalies (${\approx}49$--76 labeled events over the 9.7-year horizon, depending on evaluation protocol) limits the statistical power of performance estimates and bounds causal inference.
+The inherent rarity of extreme financial anomalies (${\approx}49$--76 labeled events over the 9.7-year horizon, depending on evaluation protocol) limits the statistical power of performance estimates and bounds causal inference. The ECI regimes contain only 5--10 anomalies each and the low-volatility detection results rest on four anomalies; block bootstrap preserves dependence but cannot compensate for this sparsity, so regime-level comparisons are reported as descriptive.
 
 \section{Conclusion}
 \label{sec:conclusion}
 This work presents a regime-conditioned approach to financial anomaly detection grounded in structural diagnosis rather than predictive accuracy. The Regime-Conditioned Mixture of Experts (RC-MoE) uses adaptive gating via realized volatility quantiles and per-regime classifier training to reveal that extreme market events carry regime-dependent structural signatures inaccessible to global detectors.
 
-Three main findings emerge. First, regime-conditional Extreme Value Theory shows that unconditional $\text{VaR}_{99}$ systematically mis-calibrates tail risk, failing Kupiec coverage in high-volatility regimes and generating significant Basel III capital distortions. Regime-aware EVT-VaR corrects this mis-calibration, and the result is replicated consistently across the equity and cryptocurrency markets. Second, formal statistical testing verifies that regime conditioning leads to a distinct precision-oriented detection profile, enabling RC-MoE to issue fewer, but more informative alerts, and to achieve substantially higher hedging efficiency than conventional volatility-based approaches. Third, factor-exposure analysis suggests that the economic value of the framework is related to systematic risk reduction rather than alpha generation, with a reduction in market beta from 1.0 to 0.63 while enhancing resilience during periods of elevated stress.
+Three main findings emerge. First, regime-conditional Extreme Value Theory shows that unconditional $\text{VaR}_{99}$ systematically mis-calibrates tail risk, failing Kupiec coverage in high-volatility regimes and generating significant Basel III capital distortions. Regime-aware EVT-VaR restores correct unconditional coverage in every regime of all four markets, although some clustering of violations remains in the high-volatility regime of the S\&P~500 (Table~\ref{tab:coverage}). Second, McNemar testing indicates that regime conditioning leads to a distinct precision-oriented detection profile, enabling RC-MoE to issue fewer, but more informative alerts, and to achieve substantially higher hedging efficiency than conventional volatility-based approaches. Third, factor-exposure analysis suggests that the economic value of the framework is related to systematic risk reduction rather than alpha generation, with a reduction in market beta from 1.0 to 0.63 while enhancing resilience during periods of elevated stress.
 
-Besides predictive performance, the proposed framework also enhances risk measurement, capital allocation, and model interpretability. The Explainability Consistency Index also shows that the drivers of anomalies change systematically across volatility regimes, highlighting the importance of regime-aware analysis for understanding financial tail events.
+Beyond detection, the proposed framework also informs risk measurement, capital allocation, and model interpretability. The Explainability Consistency Index also suggests that the drivers of anomalies differ across volatility regimes, highlighting the importance of regime-aware analysis for understanding financial tail events.
 
-The gap between in-sample structural separability and out-of-sample generalisation comes from the fundamental non-stationarity of financial markets, not from a modelling deficiency. Future work should consider adaptive estimation of regime boundaries, generalizing the EVT/Basel analysis to other asset classes, and developing gating mechanisms specific to continuously traded markets. More generally, the results suggest that regime-conditioned problem formulation, not model complexity, is the critical requirement for robust financial anomaly detection and tail-risk assessment.
+The gap between in-sample structural separability and out-of-sample generalisation comes from the fundamental non-stationarity of financial markets, not from a modelling deficiency. Future work should consider adaptive estimation of regime boundaries, generalizing the EVT/Basel analysis to other asset classes, and developing gating mechanisms specific to continuously traded markets. More generally, the evidence supports two conclusions of different strength. At the structural level, regime conditioning yields strong in-sample separability and correctly calibrated regime-level tail risk across all four markets. At the predictive level, its out-of-sample benefit is modest and period-dependent, so the framework should be read as a diagnostic and risk-calibration tool rather than as a forecasting system.
 
 
 \section*{Disclosure statement}
@@ -1589,11 +1772,7 @@ This work was supported by Manipal University Jaipur, Jaipur, Rajasthan, India.
 
 
 \section*{Data availability}
-The data that support the findings of this study are openly available in zenodo in \url{https://doi.org/10.5281/zenodo.21257024}. reference number (Hemrajani et al. 2026). The complementary risk factor structures used for the Fama-French exposure and alpha verification models are openly available from the Kenneth R. French Data Library (\url{https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html}).
-
-\section*{Code availability}
-The code that supports the findings of this study is openly available in zenodo in \url{https://doi.org/10.5281/zenodo.21257660}. reference number (Hemrajani et al. 2026).
-
+The data that support the findings of this study are openly available in Zenodo at \url{https://doi.org/10.5281/zenodo.21257024}, reference number \citep{hemrajani2026data}. The code used to produce all results is openly available in Zenodo at \url{https://doi.org/10.5281/zenodo.21257660} \citep{kumar2026code}. The daily price data were obtained from Yahoo Finance \citep{yahoo2025data}, and the Fama--French factor data used for the factor-exposure analysis from the Kenneth R. French Data Library \citep{french2025data}.
 \begin{thebibliography}{99}
 
 \bibitem[Alkilane et al.(2024)]{alkilane2024mixma}
@@ -1617,20 +1796,32 @@ Barredo Arrieta, A., N.~Díaz-Rodríguez, J.~Del Ser, A.~Bennetot, S.~Tabik, A.~
 \bibitem[Bollerslev(1986)]{bollerslev1986a}
 Bollerslev, T. 1986. \emph{Generalized autoregressive conditional heteroskedasticity}. Journal of Econometrics 31: 307--327.
 
+\bibitem[Bone-Winkel and Reichenbach(2024)]{bonewinkel2024credit}
+Bone-Winkel, G., and F.~Reichenbach. 2024. \emph{Improving credit risk assessment in P2P lending with explainable machine learning survival analysis}. Digital Finance 6: 501--542. 
+
 \bibitem[Bouchaud and Potters(2001)]{bouchaud2001more}
 Bouchaud, J.-P., and M.~Potters. 2001. \emph{More stylized facts of financial markets: Leverage effect and downside correlations}. Physica A: Statistical Mechanics and its Applications 299: 60--70.
 
 \bibitem[Breiman(2001)]{breiman2001random}
 Breiman, L. 2001. \emph{Random forests}. Machine Learning 45: 5--32.
 
+\bibitem[Candia and Herrera(2024)]{candia2024evt}
+Candia, C., and R.~Herrera. 2024. \emph{An empirical review of dynamic extreme value models for forecasting value at risk, expected shortfall and expectile}. Journal of Empirical Finance 77: 101488. 
+
+\bibitem[Cao(2026)]{cao2026interpretable}
+Cao, H. 2026. \emph{Interpretable financial time series anomaly detection based on frequency domain features and enhanced sparse attention}. Applied Intelligence 56: 324. 
+
 \bibitem[Cao and Guo(2024)]{cao2024autom}
-Cao, F., and X.~Guo. 2024. \emph{Automated financial time series anomaly detection via curiosity-guided exploration and self-imitation learning}. Engineering Applications of Artificial Intelligence 133: 108663.
+Cao, F., and X.~Guo. 2024. \emph{Automated financial time series anomaly detection via curiosity-guided exploration and self-imitation learning}. Engineering Applications of Artificial Intelligence 135: 108663.
 
 \bibitem[Chandola et al.(2009)]{chandola2009anomaly}
 Chandola, V., A.~Banerjee, and V.~Kumar. 2009. \emph{Anomaly detection: A survey}. ACM Computing Surveys 41: 1--58.
 
 \bibitem[Chen and Guestrin(2016)]{chen2016xgboost}
 Chen, T., and C.~Guestrin. 2016. \emph{XGBoost: A scalable tree boosting system}. In \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 785--794.
+
+\bibitem[Christoffersen(1998)]{christoffersen1998evaluating}
+Christoffersen, P.F. 1998. \emph{Evaluating interval forecasts}. International Economic Review 39: 841--862.
 
 \bibitem[Cont(2001)]{cont2001empirical}
 Cont, R. 2001. \emph{Empirical properties of asset returns: Stylized facts and statistical issues}. Quantitative Finance 1: 223--236.
@@ -1644,6 +1835,9 @@ Daniel, K., and T.J.~Moskowitz. 2016. \emph{Momentum crashes}. Journal of Financ
 \bibitem[Darban et al.(2024)]{darban2023deep}
 Darban, Z.Z., G.I.~Webb, S.~Pan, C.C.~Aggarwal, and M.~Salehi. 2024. \emph{Deep learning for time series anomaly detection: A survey}. ACM Computing Surveys 57: 1--42.
 
+\bibitem[D\'{\i}az et al.(2024)]{diaz2024volatility}
+D\'{\i}az, J., E.~Hansen, and G.~Cabrera. 2024. \emph{Machine-learning stock market volatility: Predictability, drivers, and economic value}. International Review of Financial Analysis 94: 103286. 
+
 \bibitem[Engle(1982)]{engle1982arch}
 Engle, R.F. 1982. \emph{Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation}. Econometrica 50: 987--1007.
 
@@ -1656,8 +1850,14 @@ Fama, E.F. 1970. \emph{Efficient capital markets: A review of theory and empiric
 \bibitem[Fama and French(2015)]{fama2015five}
 Fama, E.F., and K.R.~French. 2015. \emph{A five-factor asset pricing model}. Journal of Financial Economics 116: 1--22.
 
+\bibitem[French(2026)]{french2025data}
+French, K.R. 2026. \emph{Kenneth R. French Data Library}. Accessed 5 June 2026. \url{https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html}.
+
 \bibitem[Friedman(2001)]{friedman2001greedy}
 Friedman, J.H. 2001. \emph{Greedy function approximation: A gradient boosting machine}. Annals of Statistics 29: 1189--1232.
+
+\bibitem[Ghani and Qin(2025)]{ghani2025regime}
+Ghani, M., and Q.~Qin. 2025. \emph{Forecasting climate-sensitive industries' volatility: A regime-switching GARCH-MIDAS approach with multiple climate risk indicators}. International Review of Financial Analysis 105: 104412. 
 
 \bibitem[Guidolin(2011)]{guidolin2011markov}
 Guidolin, M. 2011. \emph{Markov switching models in empirical finance}. Advances in Econometrics 27: 1--86.
@@ -1667,6 +1867,9 @@ Hamilton, J.D. 1989. \emph{A new approach to the economic analysis of nonstation
 
 \bibitem[Hansen(1994)]{hansen1994autoregressive}
 Hansen, B.E. 1994. \emph{Autoregressive conditional density estimation}. International Economic Review 35: 705--730.
+
+\bibitem[Hemrajani et al.(2026)]{hemrajani2026data}
+Hemrajani, P., H.~Kumar, S.~Kumar, S.~Shekhar, V.~Himthani, S.~Mahalik, and M.K.~Bohra. 2026. \emph{Explainable Regime Conditioned Mixture of Experts for Financial Anomaly Detection: Replication Dataset} [Data set]. Zenodo. \url{https://doi.org/10.5281/zenodo.21257024}.
 
 \bibitem[Jacobs et al.(1991)]{jacobs1991moe}
 Jacobs, R.A., M.I.~Jordan, S.J.~Nowlan, and G.E.~Hinton. 1991. \emph{Adaptive mixtures of local experts}. Neural Computation 3: 79--87.
@@ -1679,6 +1882,9 @@ Ke, G., Q.~Meng, T.~Finley, T.~Wang, W.~Chen, W.~Ma, Q.~Ye, and T.-Y.~Liu. 2017.
 
 \bibitem[Kendall(1938)]{kendall1938measure}
 Kendall, M.G. 1938. \emph{A new measure of rank correlation}. Biometrika 30: 81--93.
+
+\bibitem[Kumar(2026)]{kumar2026code}
+Kumar, H. 2026. \emph{HarshitK2814/Financial-Anomaly-Detection-S-P500-Ensmeble\_Model: v1.0.0} [Software]. Zenodo. \url{https://doi.org/10.5281/zenodo.21257660}.
 
 \bibitem[Kupiec(1995)]{kupiec1995techniques}
 Kupiec, P.H. 1995. \emph{Techniques for verifying the accuracy of risk measurement models}. The Journal of Derivatives 3: 73--84.
@@ -1701,6 +1907,9 @@ Lundberg, S.M., and S.-I.~Lee. 2017. \emph{A unified approach to interpreting mo
 \bibitem[Luo(2025)]{luo2025robus}
 Luo, X. 2025. \emph{Robust financial fraud detection via causal intervention and multi-view contrastive learning on dynamic hypergraphs}. Mathematics 13: 4018.
 
+\bibitem[Malladi(2026)]{malladi2026regime}
+Malladi, R. 2026. \emph{Regime vs. shock: A machine learning approach to the market timing puzzle}. International Review of Financial Analysis 117: 105252. 
+
 \bibitem[Mandelbrot(1963)]{mandelbrot1963variation}
 Mandelbrot, B. 1963. \emph{The variation of certain speculative prices}. The Journal of Business 36: 394--419.
 
@@ -1709,6 +1918,9 @@ McNeil, A.J., and R.~Frey. 2000. \emph{Estimation of tail-related risk measures 
 
 \bibitem[McNeil et al.(2015)]{mcneil2015quantitative}
 McNeil, A.J., R.~Frey, and P.~Embrechts. 2015. \emph{Quantitative Risk Management: Concepts, Techniques and Tools}, 2nd ed. Princeton University Press.
+
+\bibitem[Mu et al.(2026)]{mu2026fctstock}
+Mu, S., B.~Liu, S.~Jin, C.~Lien, Y.~Zhang, and W.~Xie. 2026. \emph{FCT-stock: A fusion CNN-transformer model for anomaly detection in stock volatility}. Pattern Recognition 177: 113260. 
 
 \bibitem[Neloy and Turgeon(2024)]{neloy2024a}
 Neloy, A.A., and M.~Turgeon. 2024. \emph{A comprehensive study of auto-encoders for anomaly detection: Efficiency and trade-offs}. SSRN Electronic Journal.
@@ -1721,6 +1933,12 @@ Pang, G., C.~Shen, L.~Cao, and A.~Van Den Hengel. 2021. \emph{Deep learning for 
 
 \bibitem[Parkinson(1980)]{parkinson1980extreme}
 Parkinson, M. 1980. \emph{The extreme value method for estimating the variance of the rate of return}. Journal of Business 53: 61--65.
+
+\bibitem[Pourrezaee and Hajizadeh(2025)]{pourrezaee2025bitcoin}
+Pourrezaee, A., and E.~Hajizadeh. 2025. \emph{Forecasting Bitcoin volatility and value-at-risk using stacking machine learning models with intraday data}. Computational Economics 66: 485--515. 
+
+\bibitem[Poutr\'{e} et al.(2024)]{poutre2024deep}
+Poutr\'{e}, C., D.~Ch\'{e}telat, and M.~Morales. 2024. \emph{Deep unsupervised anomaly detection in high-frequency markets}. The Journal of Finance and Data Science 10: 100129. 
 
 \bibitem[Ribeiro et al.(2016)]{ribeiro2016lime}
 Ribeiro, M.T., S.~Singh, and C.~Guestrin. 2016. \emph{Why should I trust you?: Explaining the predictions of any classifier}. In \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 1135--1144.
@@ -1740,11 +1958,23 @@ Song, A. 2023. \emph{Anomaly VAE-Transformer: A deep learning approach for anoma
 \bibitem[Su(2025)]{su2025anoma}
 Su, T. 2025. \emph{Anomaly detection and risk early warning system for financial time series based on the WaveLST-Trans}. Transactions on Engineering and Technology Application Intelligence.
 
+\bibitem[Tabatabaei and Mousavi(2026)]{tabatabaei2026xai}
+Tabatabaei, S., and M.~Mousavi. 2026. \emph{Explainable AI for financial distress: Evidence from market volatility and regime dynamics}. Journal of Risk and Financial Management 19: 348. 
+
 \bibitem[Wang(2024)]{wang2024adapt}
 Wang, Z. 2024. \emph{Adaptive ensemble learning framework with SHAP-based feature optimization for financial anomaly detection}. AI and Machine Learning Research.
 
+\bibitem[Yahoo Finance(2026)]{yahoo2025data}
+Yahoo Finance. 2026. \emph{Historical daily prices for \^{}GSPC, \^{}IXIC, \^{}RUT and BTC-USD}. Accessed 5 June 2026. \url{https://finance.yahoo.com}.
+
+\bibitem[Yang(2026)]{yang2026expert}
+Yang, J. 2026. \emph{Expert Transformer: Fine-grained mixture-of-experts for time-series forecasting}. Expert Systems with Applications 324: 132634. 
+
 \bibitem[Zhang et al.(2024)]{wu2024anoma}
 Zhang, J., Z.~Hong, X.~Yan, and S.~Wu. 2024. \emph{Anomaly detection in financial time series based on recurrent neural networks and latent variable autoregressive models}. In \emph{Proceedings of the ACM International Conference on Multimedia}.
+
+\bibitem[Zhang et al.(2026)]{zhang2026act}
+Zhang, H., Y.~Chen, and X.~Niu. 2026. \emph{ACT: Anomaly-aware causal transformer with mixture-of-experts for time-series forecasting}. Knowledge-Based Systems 341: 115774. 
 
 \bibitem[Zhou et al.(2025)]{zhou2025kanad}
 Zhou, Q., C.~Pei, F.~Sun, J.~Han, Z.~Gao, H.~Zhang, G.~Xie, D.~Pei, and J.~Li. 2025. \emph{KAN-AD: Time series anomaly detection with Kolmogorov-Arnold networks}. arXiv preprint arXiv:2411.00278.

@@ -69,7 +69,7 @@ def fix_ablation():
         bold = i == 0
         ax.text(v + 0.8, i, f'{v}', va='center', ha='left',
                 fontsize=14, fontweight='bold' if bold else 'normal', color=N)
-        ax.text(v + 5.5, i, f'{diag}', va='center', ha='left',
+        ax.text(v + 7.5, i, f'{diag}', va='center', ha='left',
                 fontsize=10.5, color=S, style='italic')
 
     ax.set_yticks(range(len(models)))

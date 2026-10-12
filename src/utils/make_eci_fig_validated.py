@@ -23,8 +23,9 @@ NULL_COLOR = "#999999"
 def make():
     res = json.load(open("artifacts/eci_validation_results.json"))
 
-    labels = ["Low-Vol\n(ECI=0.646)", "Med-Vol\n(ECI=0.763)",
-              "High-Vol\n(ECI=0.789)", "Global\n(ECI=0.768)"]
+    # anomaly counts shown with each regime (Reviewer 1, Query 3)
+    labels = ["Low-Vol\n(ECI=0.646, 10 anomalies)", "Med-Vol\n(ECI=0.763, 5 anomalies)",
+              "High-Vol\n(ECI=0.789, 6 anomalies)", "Global\n(ECI=0.768, 21 anomalies)"]
     keys   = ["Low", "Med", "High", "Global"]
     scores = [res[k]["cross_model_eci"] for k in keys]
     ci_lo  = [res[k]["ci_lo"] for k in keys]
@@ -62,10 +63,8 @@ def make():
                 fontweight="bold" if val == max(scores) else "normal",
                 color=CB[k] if k != "Global" else DARK_BLUE)
 
-    # Pairwise significance annotation
-    ax.annotate("All pairwise Wilcoxon $p<0.001$",
-                xy=(1.5, 0.85), fontsize=9, ha="center", color=N,
-                bbox=dict(boxstyle="round,pad=0.3", fc="#F0F9FF", ec="#0072B2", lw=0.8))
+    # no between-regime significance test is shown: bootstrap replicates are not
+    # independent observations (Reviewer 1, Query 3)
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=11)

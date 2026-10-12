@@ -1,0 +1,30 @@
+%DIF YELLOW-HIGHLIGHT PREAMBLE (original text black; new/changed text highlighted; deleted text hidden)
+\RequirePackage{soul}
+\RequirePackage{xcolor}
+\definecolor{revhl}{rgb}{1,0.95,0}
+\sethlcolor{revhl}
+% highlighted words cannot be hyphenated, so allow extra inter-word stretch to keep lines inside the margin
+\setlength{\emergencystretch}{3em}
+\soulregister\cite7 \soulregister\citep7 \soulregister\citet7 \soulregister\ref7 \soulregister\eqref7
+\soulregister\emph7 \soulregister\textbf7 \soulregister\textit7 \soulregister\url7 \soulregister\texttt7
+\soulregister\mathrm7 \soulregister\text7 \soulregister\rev7
+% the highlight is written into the added text itself (\hl for words; \RCMbox for citations,
+% references, URLs and math, which soul would otherwise draw as one bar running past the margin)
+\newcommand{\RCMbox}[1]{{\setlength{\fboxsep}{0pt}\colorbox{revhl}{\vphantom{Ag}#1}}}
+\providecommand{\DIFaddtex}[1]{#1}
+\providecommand{\DIFdeltex}[1]{}
+\providecommand{\DIFaddbegin}{}
+\providecommand{\DIFaddend}{}
+\providecommand{\DIFdelbegin}{}
+\providecommand{\DIFdelend}{}
+\providecommand{\DIFmodbegin}{}
+\providecommand{\DIFmodend}{}
+\providecommand{\DIFaddFL}[1]{\DIFadd{#1}}
+\providecommand{\DIFdelFL}[1]{\DIFdel{#1}}
+\providecommand{\DIFaddbeginFL}{}
+\providecommand{\DIFaddendFL}{}
+\providecommand{\DIFdelbeginFL}{}
+\providecommand{\DIFdelendFL}{}
+\providecommand{\DIFadd}[1]{\texorpdfstring{\DIFaddtex{#1}}{#1}}
+\providecommand{\DIFdel}[1]{\texorpdfstring{\DIFdeltex{#1}}{}}
+%DIF END YELLOW-HIGHLIGHT PREAMBLE
