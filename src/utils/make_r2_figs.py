@@ -64,8 +64,8 @@ def phase1():
     ax.set_ylim(0, 8.2)
     ax.axis("off")
     navy = "#33415C"
-    ax.add_patch(FancyBboxPatch((0.1, 7.45), 12.3, 0.6, boxstyle="round,pad=0.02,rounding_size=0.1", fc=navy, ec=navy))
-    ax.text(6.25, 7.75, "PHASE 1     Factor Engineering Pipeline", color="white", ha="center", va="center", fontsize=15, weight="bold", family="serif")
+    ax.add_patch(FancyBboxPatch((1.05, 7.45), 11.65, 0.6, boxstyle="round,pad=0.02,rounding_size=0.1", fc=navy, ec=navy))
+    ax.text(6.87, 7.75, "PHASE 1     Factor Engineering Pipeline", color="white", ha="center", va="center", fontsize=15, weight="bold", family="serif")
 
     def box(x, y, w, h, fc="white", ec="#4A5568", lw=1.2):
         ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.08", fc=fc, ec=ec, lw=lw))
@@ -84,31 +84,31 @@ def phase1():
         lvl = c
     ax.text(2.12, 1.5, "S&P 500 | 2005-2025", ha="center", fontsize=10, color="#6B7280", family="serif")
     box(3.75, 0.85, 4.9, 6.25, fc="#EBEDFB", ec="#4A5568")
-    ax.text(6.2, 6.72, "8-Factor Extraction", ha="center", fontsize=14, weight="bold", family="serif")
-    groups = [("TREND & MOM", "2 factors", "Return Trend\nMomentum", 4.0, 4.3),
-              ("VOLATILITY", "1 factor", "Composite Volatility\n(window std. dev.)", 6.3, 4.3),
-              ("MICROSTRUCTURE", "3 factors", "Latent A (gap)\nLatent B (pressure)\nLatent C (range/ATR)", 4.0, 1.15),
-              ("TAIL RISK", "2 factors", "Kurtosis\nSkewness", 6.3, 1.15)]
+    ax.text(6.2, 6.68, "8-Factor Extraction", ha="center", va="center", fontsize=14, weight="bold", family="serif")
+    groups = [("TREND & MOM", "2 factors", "Return Trend\nMomentum", 3.95, 3.85),
+              ("VOLATILITY", "1 factor", "Composite Volatility\n(window std. dev.)", 6.3, 3.85),
+              ("MICROSTRUCTURE", "3 factors", "Latent A (gap)\nLatent B (pressure)\nLatent C (range/ATR)", 3.95, 1.05),
+              ("TAIL RISK", "2 factors", "Kurtosis\nSkewness", 6.3, 1.05)]
     for t, n, items, x, y in groups:
-        box(x, y, 2.1, 2.4, ec="#2563EB")
-        ax.text(x + 1.05, y + 2.0, t, ha="center", fontsize=11.5, weight="bold", color="#1E40AF")
-        ax.text(x + 1.05, y + 1.72, n, ha="center", fontsize=8.5, color="#4B5563")
-        ax.text(x + 1.05, y + 1.0, items, ha="center", va="center", fontsize=9.5, linespacing=1.5)
-    box(9.15, 1.15, 1.55, 5.0)
-    ax.text(9.92, 5.45, "Lag\nAugmentation", ha="center", fontsize=13, weight="bold", family="serif", linespacing=1.2)
+        box(x, y, 2.2, 2.45, ec="#2563EB")
+        ax.text(x + 1.1, y + 2.05, t, ha="center", fontsize=10.5, weight="bold", color="#1E40AF")
+        ax.text(x + 1.1, y + 1.77, n, ha="center", fontsize=8.5, color="#4B5563")
+        ax.text(x + 1.1, y + 1.0, items, ha="center", va="center", fontsize=9.5, linespacing=1.5)
+    box(9.1, 1.15, 1.75, 5.0)
+    ax.text(9.97, 5.45, "Lag\nAugmentation", ha="center", fontsize=10.5, weight="bold", family="serif", linespacing=1.2)
     for i, (lab, c) in enumerate([(r"$f(t-1)$", "#2563EB"), (r"$f(t-2)$", "#60A5FA"), (r"$f(t-6)$", "#93C5FD")]):
-        ax.add_patch(plt.Rectangle((9.4, 4.0 - i * 0.75), 1.05, 0.42, fc=c, ec="#4A5568", lw=0.6))
-        ax.text(9.92, 4.21 - i * 0.75, lab, ha="center", va="center", fontsize=11, color="white" if i == 0 else "black")
-    ax.text(9.92, 1.95, r"$\oplus$ Concat", ha="center", fontsize=12, weight="bold", family="serif")
-    ax.text(9.92, 1.5, r"$8\times 3=24$", ha="center", fontsize=12)
-    box(11.2, 1.15, 1.45, 5.0, fc="#ECECEC")
-    ax.text(11.92, 5.65, r"$F_t\in\mathbb{R}^{24}$", ha="center", fontsize=12)
-    ax.text(11.92, 4.75, "Factor\nState\nVector", ha="center", fontsize=12, weight="bold", family="serif", linespacing=1.25)
+        ax.add_patch(plt.Rectangle((9.45, 4.0 - i * 0.75), 1.05, 0.42, fc=c, ec="#4A5568", lw=0.6))
+        ax.text(9.97, 4.21 - i * 0.75, lab, ha="center", va="center", fontsize=11, color="white" if i == 0 else "black")
+    ax.text(9.97, 1.95, r"$\oplus$ Concat", ha="center", fontsize=11.5, weight="bold", family="serif")
+    ax.text(9.97, 1.5, r"$8\times 3=24$", ha="center", fontsize=11.5)
+    box(11.25, 1.15, 1.45, 5.0, fc="#ECECEC")
+    ax.text(11.97, 5.65, r"$F_t\in\mathbb{R}^{24}$", ha="center", fontsize=12)
+    ax.text(11.97, 4.75, "Factor\nState\nVector", ha="center", fontsize=11.5, weight="bold", family="serif", linespacing=1.25)
     cols = ["#60A5FA", "#33415C", "#2563EB", "black"]
     for i in range(6):
         for j in range(4):
-            ax.add_patch(plt.Rectangle((11.6 + j * 0.16, 3.4 - i * 0.18), 0.16, 0.18, fc=cols[rng.integers(0, 4)], ec="#9CA3AF", lw=0.4))
-    for x0, x1 in [(3.2, 3.75), (8.65, 9.15), (10.7, 11.2)]:
+            ax.add_patch(plt.Rectangle((11.65 + j * 0.16, 3.4 - i * 0.18), 0.16, 0.18, fc=cols[rng.integers(0, 4)], ec="#9CA3AF", lw=0.4))
+    for x0, x1 in [(3.2, 3.75), (8.65, 9.1), (10.85, 11.25)]:
         ax.annotate("", xy=(x1, 3.65), xytext=(x0, 3.65), arrowprops=dict(arrowstyle="->", color="#4A5568", lw=1.3))
     ax.text(3.47, 3.8, r"$\phi(\cdot)$", ha="center", fontsize=12)
     ax.annotate("", xy=(12.65, 0.35), xytext=(1.05, 0.35), arrowprops=dict(arrowstyle="<->", color="#4A5568", lw=1))
@@ -231,11 +231,9 @@ def ablation():
     cols = [GREY, GREY, SKY, SKY, ORANGE, BLUE]
     ax.barh(lab, v, xerr=[lo, hi], color=cols, ec="k", lw=0.5, capsize=3)
     for i, x in enumerate(v):
-        ax.text(x + hi[i] + 0.006, i + 0.1, f"{x:.3f}", fontsize=9)
-    ax.axvline(M["prev"], color="k", ls=":", lw=1, label=f"Base rate ({M['prev']:.3f})")
-    ax.axvline(M["det"]["GARCH-FHS"]["auprc"], color=VERM, ls="--", lw=1.2, label=f"GARCH-FHS ({M['det']['GARCH-FHS']['auprc']:.3f})")
+        ax.text(x + hi[i] + 0.008, i, f"{x:.3f}", fontsize=9, va="center")
+    ax.set_xlim(0, max(a + b for a, b in zip(v, hi)) + 0.06)
     ax.set_xlabel("Out-of-sample AUPRC (block-bootstrap 95% CI)")
-    ax.legend(loc="lower right", fontsize=8)
     ax.invert_yaxis()
     save(fig, "ablation_chart_paper")
 
@@ -258,7 +256,6 @@ def sensitivity():
     for j, K in enumerate(Ks):
         b.plot(Ls, A[:, j], marker="o", label=f"RC-MoE, K={K}", color=[SKY, BLUE, PURPLE][j])
     b.plot(Ls, G, marker="s", color="k", ls="--", label="Global ensemble")
-    b.axhline(S["L128_K3"]["prev"], color=GREY, ls=":", label="Base rate")
     b.set_xticks(Ls); b.set_xlabel("Factor window L (days)"); b.set_ylabel("AUPRC"); b.legend(fontsize=8)
     b.set_title("(b) Comparison with the global ensemble")
     save(fig, "fig_sensitivity_oos")
@@ -285,8 +282,10 @@ def radar():
         ax.plot(ang, vals, color=[BLUE, ORANGE, GREEN, VERM][i], lw=2, label=n)
         ax.fill(ang, vals, color=[BLUE, ORANGE, GREEN, VERM][i], alpha=0.08)
     ax.set_xticks(ang[:-1], axes, fontsize=9)
-    ax.set_yticks([0.2, 0.6, 1.0], ["min", "", "max"], fontsize=7)
-    ax.legend(loc="upper right", bbox_to_anchor=(1.32, 1.12), fontsize=8)
+    ax.set_yticks([0.2, 0.6, 1.0], [])
+    ax.set_ylim(0, 1.0)
+    ax.tick_params(axis="x", pad=14)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.12, 1.05), fontsize=8)
     save(fig, "fig1_radar_overview")
 
 
@@ -305,10 +304,10 @@ def oos_chart():
     ax.bar(x - w, a, w, yerr=err, color=BLUE, ec="k", lw=0.4, capsize=2, label="AUPRC (95% CI)")
     ax.bar(x, p, w, color=SKY, ec="k", lw=0.4, label="Precision at 5% budget")
     ax.bar(x + w, r, w, color=GREY, ec="k", lw=0.4, label="Recall at 5% budget")
-    ax.axhline(M["prev"], color="k", ls=":", lw=1, label=f"Base rate ({M['prev']:.3f})")
     ax.set_xticks(x, lab, fontsize=9)
     ax.set_ylabel("Score")
-    ax.legend(fontsize=8, ncol=4, loc="upper right")
+    ax.set_ylim(0, 0.52)
+    ax.legend(fontsize=8, ncol=3, loc="upper right")
     save(fig, "oos_performance_chart")
 
 
@@ -332,7 +331,7 @@ def timeline():
     ax.set_xlim(axs[0].get_xlim())
     z = d.loc["2020-01-15":"2020-05-15"]
     ax = axs[2]
-    ax.bar(z.index, np.abs(z.r) * 100, color=GREY, width=1, label="|r_t|")
+    ax.bar(z.index, np.abs(z.r) * 100, color=GREY, width=1, label=r"$|r_t|$")
     ax.plot(z.index, z.tau * 100, color="k", lw=1.2, ls="--", label=r"Threshold $\tau_t$")
     zm, zg = a_m.loc[z.index], a_g.loc[z.index]
     ax.scatter(z.index[zm == 1], np.abs(z.r[zm == 1]) * 100 + 0.6, marker="v", c=BLUE, s=30, label="RC-MoE alert")
@@ -342,7 +341,6 @@ def timeline():
     rk = lambda s: s.rank(pct=True)
     ax.plot(z.index, rk(d["RC-MoE"]).loc[z.index], color=BLUE, label="RC-MoE score (percentile)")
     ax.plot(z.index, rk(d["GARCH-FHS"]).loc[z.index], color=VERM, label="GARCH-FHS score (percentile)")
-    ax.axhline(0.95, color="k", ls=":", lw=1)
     ax.set_ylim(0, 1.02); ax.legend(fontsize=8, loc="lower left", ncol=2); ax.set_title("(d) Out-of-sample scores (percentile rank)")
     fig.tight_layout()
     save(fig, "fig4_anomaly_detection_zoom")
@@ -387,7 +385,7 @@ def panels():
         ax.scatter(z.index[z.y == 1], z.r[z.y == 1] * 100, marker="o", fc="none", ec="k", s=40, label="Anomaly")
         hit = (a == 1) & (z.y == 1)
         ax.scatter(z.index[a == 1], z.r[a == 1] * 100, marker="x", c=BLUE, s=25, label="Alert")
-        ax.set_ylabel("r (%)"); ax.set_title(f"{c}: {int(a.sum())} alerts, {int(hit.sum())} hits", fontsize=9)
+        ax.set_ylabel("r (%)"); ax.set_title(f"{c}: {int(a.sum())} alerts, {int(hit.sum())} hit{'' if int(hit.sum()) == 1 else 's'}", fontsize=9)
         ax2 = axs[i, 1]
         ax2.plot(z.index, d[c].rank(pct=True).loc[z.index], color=BLUE, lw=1)
         ax2.axhline(0.95, color=VERM, ls="--", lw=1)
@@ -465,14 +463,15 @@ def factor_beta():
         a.bar(x + (i - 0.5) * 0.38, [F[c][f]["est"] for f in fac], 0.38, color=col, label=c, ec="k", lw=0.4)
         for j, f in enumerate(fac):
             if F[c][f]["p"] < 0.05:
-                a.text(x[j] + (i - 0.5) * 0.38, F[c][f]["est"] + 0.02, "*", ha="center")
+                e = F[c][f]["est"]
+                a.text(x[j] + (i - 0.5) * 0.38, e + (0.01 if e >= 0 else -0.01), "*", ha="center", va="bottom" if e >= 0 else "top")
     a.set_xticks(x, fac); a.axhline(0, color="k", lw=0.6); a.legend(fontsize=8); a.set_title("(a) FF5+MOM loadings (* p<0.05)")
     df = D.join(ff, how="inner")
     for c, col in [("RC-MoE", BLUE), ("GARCH-FHS", VERM)]:
         ex = df[c] - df["rf"]
         beta = ex.rolling(252).cov(df["MktRF"]) / df["MktRF"].rolling(252).var()
         b.plot(beta.index, beta, color=col, lw=1.3, label=c)
-    b.axhline(1, color="k", ls=":", lw=1); b.set_ylabel("Rolling 252-day market beta"); b.legend(fontsize=8)
+    b.set_ylabel("Rolling 252-day market beta"); b.legend(fontsize=8)
     b.set_title("(b) Rolling market beta")
     save(fig, "fig_factor_beta")
 
@@ -497,7 +496,6 @@ def evt_tail():
         ax.plot(xs * 100, 0.1 * genpareto.sf(xs - u, xi, 0, be), color=REG_COL[k], lw=2,
                 label=fr"{REG_NAME[k]}: $\hat\xi$={xi:+.3f}, n$_u$={len(exc)}")
     ax.set_yscale("log"); ax.set_xlabel("Daily loss (%)"); ax.set_ylabel("P(loss > x)")
-    ax.axhline(0.01, color="k", ls=":", lw=1)
     ax.legend(fontsize=8)
     save(fig, "fig_evt_tail")
 
@@ -542,6 +540,7 @@ def capital():
     ax.set_xticks(range(3), ["Low-Vol", "Med-Vol", "High-Vol"])
     ax.set_ylabel("Mean FRTB ES capital (% of position)")
     ax.set_title("Numbers above bars: days on which the next 10-day loss exceeded capital", fontsize=9)
+    ax.set_ylim(0, 33)
     ax.legend(fontsize=8, ncol=5, loc="upper left")
     save(fig, "fig_basel_capital")
 
@@ -571,7 +570,7 @@ def var_boundaries():
         ax.plot(d.index, -d[f"{c}|v99"] * 100, color=col, lw=1, label=fr"{c} VaR$_{{99}}$")
         v = d.loss > d[f"{c}|v99"]
         ax.scatter(d.index[v], d.r[v] * 100, s=14, color=col, zorder=3)
-    ax.set_ylabel("Daily return (%)"); ax.legend(fontsize=8, ncol=3, loc="lower left"); ax.set_ylim(-13, 10)
+    ax.set_ylabel("Daily return (%)"); ax.legend(fontsize=8, ncol=3, loc="lower left"); ax.set_ylim(-14.5, 10)
     save(fig, "var_boundaries_chart")
 
 
@@ -585,9 +584,8 @@ def eci():
     fig, ax = plt.subplots(figsize=(6.5, 3.8))
     ax.bar(lab, v, yerr=err, color=[GREY, GREEN, ORANGE, VERM], ec="k", lw=0.5, capsize=4)
     ax.axhspan(E["null"]["ci"][0], E["null"]["ci"][1], color="k", alpha=0.08, label="Random-ranking null (95%)")
-    ax.axhline(E["null"]["mean"], color="k", ls=":", lw=1)
     for i, s in enumerate(sc):
-        ax.text(i, E[s]["ci"][1] + 0.01, f"{v[i]:.3f}\n({E[s]['pos']} anom.)", ha="center", fontsize=8)
+        ax.text(i, E[s]["ci"][1] + 0.025, f"{v[i]:.3f}\n({E[s]['pos']} anom.)", ha="center", va="bottom", fontsize=8)
     ax.set_ylim(0.3, 1.0); ax.set_ylabel("ECI"); ax.legend(fontsize=8, loc="lower right")
     save(fig, "eci_chart")
 
