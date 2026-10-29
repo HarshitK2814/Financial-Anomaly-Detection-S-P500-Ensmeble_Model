@@ -80,6 +80,38 @@ python src/evaluation/factor_alpha.py      # Fama-French 5 + Momentum alpha test
 python src/evaluation/multimarket_eventwise_canonical.py   # cross-market event-wise detection
 ```
 
+## Reproducing the second revision (v2.0.0)
+
+The second revision uses one ex-ante pipeline: features, regimes and anomaly thresholds for day t use data up to the
+close of day t-1, and one anomaly definition (95th percentile of past |r| in the same regime) is used throughout.
+All code is in `src/evaluation/r2_*.py`.
+
+1. Download the replication dataset (v2) from Zenodo and put its files in `artifacts/r2/`
+   (`ohlcv_*.csv`, `irx.csv`). Put the Fama-French files `FF5_daily.csv` and `MOM_daily.csv`
+   (Kenneth R. French Data Library) in `artifacts/data/ff_factors/`.
+2. Install the extra packages: `pip install arch hmmlearn lightgbm xgboost torch`.
+3. Run from the repository root:
+
+```bash
+python -m src.evaluation.r2_common              # ex-ante factors, regimes and labels
+python -m src.evaluation.r2_detection           # walk-forward out-of-sample scores, 4 markets
+python -m src.evaluation.r2_detection sens      # L x K sensitivity (S&P 500)
+python -m src.evaluation.r2_deep                # ConvVAE and Anomaly Transformer (S&P 500)
+python -m src.evaluation.r2_sameday             # same-day label-reproduction check
+python -m src.evaluation.r2_metrics             # AUPRC, equal budgets, block bootstrap, paired tests
+python -m src.evaluation.r2_backtest            # hedging overlay, lag, costs, random timing, FF5 + MOM
+python -m src.evaluation.r2_risk                # VaR / ES backtests, FRTB-style capital
+python -m src.evaluation.r2_explain             # ECI and SHAP with block-bootstrap refits
+python -m src.evaluation.r2_extra detect        # GARCH-augmented detectors
+python -m src.evaluation.r2_extra metrics
+python -m src.evaluation.r2_extra risk          # regime-conditional GARCH-EVT
+python -m src.evaluation.r2_extra backtest
+python -m src.utils.make_r2_tables             # LaTeX tables
+python -m src.utils.make_r2_figs               # figures (output folder: env R2_FIG_DIR)
+```
+
+All estimators use an explicit `n_jobs`. Results are written to `artifacts/r2/`.
+
 ## Citation
 
 ```bibtex
